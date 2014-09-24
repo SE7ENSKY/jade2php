@@ -1,0 +1,15 @@
+{
+  "name": "jade-php-renderer",
+  "dependencies": {
+    "jade": "^1.7.0"
+  },
+	"devDependencies": {
+		"coffee-script": "*",
+	    "mocha": "*",
+	    "chai": "*"
+	},
+	"scripts": {
+        "test": "./node_modules/.bin/mocha --compilers coffee:coffee-script/register",
+        "prepublish": "./node_modules/.bin/coffee -cb src/*.coffee -o out"
+    }
+}
