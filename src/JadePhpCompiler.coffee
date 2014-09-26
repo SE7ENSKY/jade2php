@@ -22,6 +22,9 @@ jsExpressionToPhp = (s) ->
 	else if ///^['"]///.test s # string?
 		s
 
+IF_REGEX = ///^if\s\(\s?(.*)\)$///
+ELSE_IF_REGEX = ///^else\s+if\s+\(\s?(.*)\)$///
+
 "use strict"
 
 nodes = require("jade/lib/nodes")
@@ -90,7 +93,7 @@ Compiler:: =
               y++
             x++
         i++
-    @buf.join "\n"
+    @buf.join if @pp then "\n" else ""
 
   
   ###*
@@ -207,9 +210,10 @@ Compiler:: =
     
     # Massive hack to fix our context
     # stack for - else[ if] etc
-    if false is node.debug and @debug
-      @buf.pop()
-      @buf.pop()
+
+    # if false is node.debug and @debug
+    #   @buf.pop()
+    #   @buf.pop()
     @visitNode node
     # @buf.push "jade_debug.shift();"  if debug
     return
@@ -234,9 +238,9 @@ Compiler:: =
   visitCase: (node) ->
     _ = @withinCase
     @withinCase = true
-    @buf.push "switch (" + node.expr + "){"
+    @buf.push "<?php switch (#{jsExpressionToPhp node.expr}) : ?>"
     @visit node.block
-    @buf.push "}"
+    @buf.push "<?php endswitch ?>"
     @withinCase = _
     return
 
@@ -249,12 +253,12 @@ Compiler:: =
   ###
   visitWhen: (node) ->
     if "default" is node.expr
-      @buf.push "default:"
+      @buf.push "<?php default : ?>"
     else
-      @buf.push "case " + node.expr + ":"
+      @buf.push "<?php case #{jsExpressionToPhp node.expr} : ?>"
     if node.block
       @visit node.block
-      @buf.push "  break;"
+      @buf.push "<?php break ?>" unless "default" is node.expr
     return
 
   
@@ -288,7 +292,18 @@ Compiler:: =
       
       # Pretty print text
       @prettyIndent 1, false  if pp and i > 0 and not escape and block.nodes[i].isText and block.nodes[i - 1].isText
-      @visit block.nodes[i]
+
+      # else, else if support
+      if i < len - 1 and block.nodes[i].type is 'Code' and IF_REGEX.test block.nodes[i].val
+        @nextElses = []
+        j = i + 1
+        while j < len and block.nodes[j].type is 'Code' and ///^else///.test block.nodes[j].val
+          @nextElses.push block.nodes[j]
+          ++j
+        @visit block.nodes[i]
+        @nextElses = null
+      else
+        @visit block.nodes[i]
       
       # Multiple text nodes are separated by newlines
       @buffer "\n"  if block.nodes[i + 1] and block.nodes[i].isText and block.nodes[i + 1].isText
@@ -530,7 +545,7 @@ Compiler:: =
     # Wrap code blocks with {}.
     # we only wrap unbuffered code blocks ATM
     # since they are usually flow control
-    
+
     # Buffer code
     if code.buffer
       val = code.val.trimLeft()
@@ -538,16 +553,41 @@ Compiler:: =
       val = "htmlspecialchars(" + val + ")"  if code.escape
       val = '<?= ' + val + ' ?>'
       @bufferExpression val
+    else if IF_REGEX.test code.val
+      m = code.val.match IF_REGEX
+      condition = m[1]
+      @visitIf
+        condition: condition
+        block: code.block
+        nextElses: @nextElses
+    else if ///^else///.test code.val
+      # ignore else and else-if, they was catched in @nextElses when processing first if
     else
       @buf.push code.val
     
-    # Block support
-    if code.block
-      @buf.push "<?php "  unless code.buffer
-      @visit code.block
-      @buf.push " ?>"  unless code.buffer
+      # Block support
+      if code.block
+        # @buf.push "<?php "  unless code.buffer
+        @visit code.block
+        # @buf.push " ?>"  unless code.buffer
     return
 
+  visitIf: (ifNode) ->
+    @buf.push "<?php if (#{jsExpressionToPhp ifNode.condition}) : ?>"
+    @visit ifNode.block if ifNode.block
+    unless ifNode.nextElses
+      @buf.push "<?php endif ?>"
+    else
+      for alternative in ifNode.nextElses
+        if alternative.val is "else"
+          @buf.push "<?php else : ?>"
+          @visit alternative.block
+        else if ELSE_IF_REGEX.test alternative.val
+          m = alternative.val.match ELSE_IF_REGEX
+          condition = m[1]
+          @buf.push "<?php else if (#{jsExpressionToPhp condition}) : ?>"
+          @visit alternative.block
+      @buf.push "<?php endif ?>"
   
   ###*
   Visit `each` block.
@@ -556,23 +596,18 @@ Compiler:: =
   @api public
   ###
   visitEach: (each) ->
-    @buf.push "" + "// iterate " + each.obj + "\n" + ";(function(){\n" + "  var $$obj = " + each.obj + ";\n" + "  if ('number' == typeof $$obj.length) {\n"
-    @buf.push "  if ($$obj.length) {"  if each.alternative
-    @buf.push "" + "    for (var " + each.key + " = 0, $$l = $$obj.length; " + each.key + " < $$l; " + each.key + "++) {\n" + "      var " + each.val + " = $$obj[" + each.key + "];\n"
+    as = if each.key is '$index'
+      jsExpressionToPhp each.val
+    else
+      "#{jsExpressionToPhp each.key} => #{jsExpressionToPhp each.val}"
+    @buf.push "<?php if (#{jsExpressionToPhp each.obj}) : foreach (#{jsExpressionToPhp each.obj} as #{as}) : ?>"
     @visit each.block
-    @buf.push "    }\n"
-    if each.alternative
-      @buf.push "  } else {"
+    unless each.alternative
+      @buf.push "<?php endforeach; endif ?>"
+    else
+      @buf.push "<?php endforeach; else : ?>"
       @visit each.alternative
-      @buf.push "  }"
-    @buf.push "" + "  } else {\n" + "    var $$l = 0;\n" + "    for (var " + each.key + " in $$obj) {\n" + "      $$l++;" + "      var " + each.val + " = $$obj[" + each.key + "];\n"
-    @visit each.block
-    @buf.push "    }\n"
-    if each.alternative
-      @buf.push "    if ($$l === 0) {"
-      @visit each.alternative
-      @buf.push "    }"
-    @buf.push "  }\n}).call(this);\n"
+      @buf.push "<?php endif ?>"
     return
 
   
