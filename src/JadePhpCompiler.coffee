@@ -13,14 +13,10 @@ errorAtNode = (node, error) ->
   error.filename = node.filename
   error
 
-jsExpressionToPhp = (s) ->
-	# .replace ///\.///g, '->'
-	if ///^[a-z_][a-zA-Z0-9_]*$///.test s
-		"$" + s
-	else if ///^\d+$///.test s
-		s
-	else if ///^['"]///.test s # string?
-		s
+js2php = require 'js2php'
+jsExpressionToPhp = (jsExpr) ->
+  phpCode = js2php jsExpr
+  phpCode.replace(///^<\?php\n///g, "").replace(///;\n$///g, "")
 
 IF_REGEX = ///^if\s\(\s?(.*)\)$///
 ELSE_IF_REGEX = ///^else\s+if\s+\(\s?(.*)\)$///
@@ -650,7 +646,15 @@ Compiler:: =
       else
         if buffer
           # @bufferExpression "jade.attr(\"" + key + "\", " + attr.val + ", " + utils.stringify(escaped) + ", " + utils.stringify(@terse) + ")"
-          @bufferExpression "<?= ($_ = #{jsExpressionToPhp attr.val}) ? (' #{key}=\"' . #{if escaped then 'htmlspecialchars($_)' else '$_'} . '\"') : '' ?>"
+          if ///^[a-z_][a-z_A-Z0-9]*$///.test attr.val
+            @bufferExpression "<?= ($_ = #{jsExpressionToPhp attr.val}) ? (' #{key}=\"' . #{if escaped then 'htmlspecialchars($_)' else '$_'} . '\"') : '' ?>"
+          else
+            jsString = attr.val
+            jadeString = jsString.replace(///^"///, '').replace(///"$///, '')
+            jadeString = jadeString.replace ///"\s\+\s\(([^"]+)\)\s\+\s"///g, '#{$1}'
+            @buffer " #{key}=\""
+            @buffer jadeString, yes
+            @buffer "\""
         else
           val = attr.val
           if escaped and (key.indexOf("data") isnt 0)

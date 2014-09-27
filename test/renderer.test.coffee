@@ -108,7 +108,11 @@ describe 'JadePhpCompiler', ->
 
 		it 'should support simple attr interpolation with variable', ->
 			c 'article(id="post-#{id}")', '<article id="post-<?= htmlspecialchars($id) ?>"></article>'
-			c 'article(id="post-!{id}")', '<article id="post-<?= $id ?>"></article>'
+			c 'article(id="post-#{type}-#{id}")', '<article id="post-<?= htmlspecialchars($type) ?>-<?= htmlspecialchars($id) ?>"></article>'
+			c 'article(id="post-#{type}-#{id}") Post \##{id} of type \'#{type}\'', '<article id="post-<?= htmlspecialchars($type) ?>-<?= htmlspecialchars($id) ?>">Post #<?= htmlspecialchars($id) ?> of type \'<?= htmlspecialchars($type) ?>\'</article>'
+			
+			# jade not support this :(
+			# c 'article(id="post-!{idNumber}")', '<article id="post-<?= $idNumber ?>"></article>'
 
 	describe 'control statements', ->
 		describe 'condition', ->
@@ -158,6 +162,13 @@ describe 'JadePhpCompiler', ->
 							else
 								| what?
 					""", '<div class="test-result"><?php if ($oneBranch) : ?>one<?php else : ?>not one<?php endif ?><?php if ($anotherBranch) : ?>another<?php endif ?><?php if ($anyBranch) : ?>any<?php else : ?>what?<?php endif ?></div>'
+				it 'support negated if – unless', ->
+					c """
+						unless a
+							| not a
+						else
+							| a
+					""", '<?php if (!$a) : ?>not a<?php else : ?>a<?php endif ?>'
 			describe 'case', ->
 				it 'string comparisons', ->
 					c """

@@ -2,7 +2,8 @@
   "name": "jade-php-compiler",
   "version": "0.0.1",
   "dependencies": {
-    "jade": "^1.7.0"
+    "jade": "^1.7.0",
+    "js2php": "0.0.9"
   },
   "devDependencies": {
     "coffee-script": "*",
