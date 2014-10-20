@@ -214,3 +214,9 @@ describe 'JadePhpCompiler', ->
 					else
 						.error No users found
 				""", '<?php if ($users) : foreach ($users as $user) : ?><div class="user"><?= htmlspecialchars($user) ?></div><?php endforeach; else : ?><div class="error">No users found</div><?php endif ?>'
+
+	describe "extends and blocks", ->
+		it "should support extends", ->
+			c """
+				extends rootTemplate
+			""", "gg"

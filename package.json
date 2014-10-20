@@ -1,9 +1,12 @@
 {
-  "name": "jade-php-compiler",
+  "name": "jade2php",
   "version": "0.0.1",
   "dependencies": {
+    "commander": "^2.4.0",
     "jade": "^1.7.0",
-    "js2php": "0.0.9"
+    "js2php": "0.0.9",
+    "mkdirp": "^0.5.0",
+    "monocle": "^1.1.51"
   },
   "devDependencies": {
     "coffee-script": "*",
@@ -13,5 +16,8 @@
   "scripts": {
     "test": "./node_modules/.bin/mocha --compilers coffee:coffee-script/register",
     "prepublish": "./node_modules/.bin/coffee -cb src/*.coffee -o out"
+  },
+  "bin": {
+    "jade2php": "./bin/jade2php"
   }
 }
