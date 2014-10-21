@@ -348,6 +348,12 @@ Compiler:: =
     block = mixin.block
     attrs = mixin.attrs
     attrsBlocks = mixin.attributeBlocks
+
+    args = (if args then args.split(",") else [])
+    phpAttrs = (jsExpressionToPhp arg for arg in args)
+
+    phpMixinName = mixin.name.replace ///-///, '_'
+
     pp = @pp
     dynamic = mixin.name[0] is "#"
     key = mixin.name
@@ -359,54 +365,60 @@ Compiler:: =
 
     if mixin.call
       @mixins[key].used = true
-      @buf.push "jade_indent.push('" + Array(@indents + 1).join("  ") + "');"  if pp
-      if block or attrs.length or attrsBlocks.length
-        @buf.push name + ".call({"
-        if block
-          @buf.push "block: function(){"
+      # @buf.push "jade_indent.push('" + Array(@indents + 1).join("  ") + "');"  if pp
+      # if block or attrs.length or attrsBlocks.length
+      #   @buf.push name + ".call({"
+      #   if block
+      #     @buf.push "block: function(){"
           
-          # Render block with no indents, dynamically added when rendered
-          @parentIndents++
-          _indents = @indents
-          @indents = 0
-          @visit mixin.block
-          @indents = _indents
-          @parentIndents--
-          if attrs.length or attrsBlocks.length
-            @buf.push "},"
-          else
-            @buf.push "}"
-        if attrsBlocks.length
-          if attrs.length
-            val = @attrs(attrs)
-            attrsBlocks.unshift val
-          @buf.push "attributes: jade.merge([" + attrsBlocks.join(",") + "])"
-        else if attrs.length
-          val = @attrs(attrs)
-          @buf.push "attributes: " + val
-        if args
-          @buf.push "}, " + args + ");"
-        else
-          @buf.push "});"
-      else
-        @buf.push name + "(" + args + ");"
-      @buf.push "jade_indent.pop();"  if pp
+      #     # Render block with no indents, dynamically added when rendered
+      #     @parentIndents++
+      #     _indents = @indents
+      #     @indents = 0
+      #     @visit mixin.block
+      #     @indents = _indents
+      #     @parentIndents--
+      #     if attrs.length or attrsBlocks.length
+      #       @buf.push "},"
+      #     else
+      #       @buf.push "}"
+      #   if attrsBlocks.length
+      #     if attrs.length
+      #       val = @attrs(attrs)
+      #       attrsBlocks.unshift val
+      #     @buf.push "attributes: jade.merge([" + attrsBlocks.join(",") + "])"
+      #   else if attrs.length
+      #     val = @attrs(attrs)
+      #     @buf.push "attributes: " + val
+      #   if args
+      #     @buf.push "}, " + args + ");"
+      #   else
+      #     @buf.push "});"
+      # else
+      #   @buf.push name + "(" + args + ");"
+      # @buf.push "jade_indent.pop();"  if pp
+      @buf.push "<?php mixin__#{phpMixinName}(#{phpAttrs.join ', '}) ?>"
     else
       mixin_start = @buf.length
-      args = (if args then args.split(",") else [])
+      # args = (if args then args.split(",") else [])
       rest = undefined
       rest = args.pop().trim().replace(/^\.\.\./, "")  if args.length and /^\.\.\./.test(args[args.length - 1].trim())
-      @buf.push name + " = function(" + args.join(",") + "){"
-      @buf.push "var block = (this && this.block), attributes = (this && this.attributes) || {};"
-      if rest
-        @buf.push "var " + rest + " = [];"
-        @buf.push "for (jade_interp = " + args.length + "; jade_interp < arguments.length; jade_interp++) {"
-        @buf.push "  " + rest + ".push(arguments[jade_interp]);"
-        @buf.push "}"
+      # @buf.push name + " = function(" + args.join(",") + "){"
+      # @buf.push "var block = (this && this.block), attributes = (this && this.attributes) || {};"
+      # if rest
+      #   @buf.push "var " + rest + " = [];"
+      #   @buf.push "for (jade_interp = " + args.length + "; jade_interp < arguments.length; jade_interp++) {"
+      #   @buf.push "  " + rest + ".push(arguments[jade_interp]);"
+      #   @buf.push "}"
+      # @parentIndents++
+      # @visit block
+      # @parentIndents--
+      # @buf.push "};"
+      @buf.push "<?php function mixin__#{phpMixinName}(#{phpAttrs.join ', '}) { ?>"
       @parentIndents++
       @visit block
       @parentIndents--
-      @buf.push "};"
+      @buf.push "<?php } ?>"
       mixin_end = @buf.length
       @mixins[key].instances.push
         start: mixin_start

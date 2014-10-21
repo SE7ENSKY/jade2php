@@ -228,6 +228,33 @@ describe 'JadePhpCompiler', ->
 					h1 Hello, \#{firstName} \#{lastName}!
 				""", '<?php $firstName = "Node" ?><?php $lastName = "JS" ?><h1>Hello, <?= htmlspecialchars($firstName) ?> <?= htmlspecialchars($lastName) ?>!</h1>'
 
+	describe 'mixins', ->
+		it 'simple', ->
+			c """
+				mixin user
+					.user
+
+				+user()
+				+user()
+			""", '<?php function mixin__user() { ?><div class="user"></div><?php } ?><?php mixin__user() ?><?php mixin__user() ?>'
+		it 'with args', ->
+			c """
+				mixin user(name)
+					.user= name
+
+				+user("Node")
+				+user("JS")
+				+user("PHP")
+			""", "<?php function mixin__user($name) { ?><div class=\"user\"><?= htmlspecialchars($name) ?></div><?php } ?><?php mixin__user(\"Node\") ?><?php mixin__user(\"JS\") ?><?php mixin__user(\"PHP\") ?>"
+		it 'name with dashes', ->
+			c """
+				mixin user-name(firstName, lastName)
+					span.user-name !{firstName} !{lastName}
+
+				+user-name("Node", "JS")
+				+user-name("Jade", "PHP")
+			""", "<?php function mixin__user_name($firstName, $lastName) { ?><span class=\"user-name\"><?= $firstName ?> <?= $lastName ?></span><?php } ?><?php mixin__user_name(\"Node\", \"JS\") ?><?php mixin__user_name(\"Jade\", \"PHP\") ?>"
+
 	# describe "extends and blocks", ->
 	# 	it "should support extends", ->
 	# 		c """
