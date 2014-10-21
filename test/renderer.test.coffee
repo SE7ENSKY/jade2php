@@ -215,8 +215,21 @@ describe 'JadePhpCompiler', ->
 						.error No users found
 				""", '<?php if ($users) : foreach ($users as $user) : ?><div class="user"><?= htmlspecialchars($user) ?></div><?php endforeach; else : ?><div class="error">No users found</div><?php endif ?>'
 
-	describe "extends and blocks", ->
-		it "should support extends", ->
-			c """
-				extends rootTemplate
-			""", "gg"
+		describe 'code node', ->
+			it 'simple', ->
+				c """
+					- var name = "NodeJS"
+					h1 Hello, \#{name}!
+				""", '<?php $name = "NodeJS" ?><h1>Hello, <?= htmlspecialchars($name) ?>!</h1>'
+				
+				c """
+					- var firstName = "Node"
+					- var lastName = "JS"
+					h1 Hello, \#{firstName} \#{lastName}!
+				""", '<?php $firstName = "Node" ?><?php $lastName = "JS" ?><h1>Hello, <?= htmlspecialchars($firstName) ?> <?= htmlspecialchars($lastName) ?>!</h1>'
+
+	# describe "extends and blocks", ->
+	# 	it "should support extends", ->
+	# 		c """
+	# 			extends rootTemplate
+	# 		""", "gg"

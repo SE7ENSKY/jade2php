@@ -559,7 +559,7 @@ Compiler:: =
     else if ///^else///.test code.val
       # ignore else and else-if, they was catched in @nextElses when processing first if
     else
-      @buf.push code.val
+      @buf.push "<?php #{jsExpressionToPhp code.val} ?>"
     
       # Block support
       if code.block
