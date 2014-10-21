@@ -14,8 +14,7 @@
     "chai": "*"
   },
   "scripts": {
-    "test": "./node_modules/.bin/mocha --compilers coffee:coffee-script/register",
-    "prepublish": "./node_modules/.bin/coffee -cb src/*.coffee -o out"
+    "test": "./node_modules/.bin/mocha --compilers coffee:coffee-script/register"
   },
   "bin": {
     "jade2php": "./bin/jade2php"
