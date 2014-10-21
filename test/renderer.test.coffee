@@ -236,7 +236,7 @@ describe 'JadePhpCompiler', ->
 
 				+user()
 				+user()
-			""", '<?php function mixin__user() { ?><div class="user"></div><?php } ?><?php mixin__user() ?><?php mixin__user() ?>'
+			""", """<?php function mixin__user($block = null) { ?><div class="user"></div><?php } ?><?php mixin__user() ?><?php mixin__user() ?>"""
 		it 'with args', ->
 			c """
 				mixin user(name)
@@ -245,7 +245,7 @@ describe 'JadePhpCompiler', ->
 				+user("Node")
 				+user("JS")
 				+user("PHP")
-			""", "<?php function mixin__user($name) { ?><div class=\"user\"><?= htmlspecialchars($name) ?></div><?php } ?><?php mixin__user(\"Node\") ?><?php mixin__user(\"JS\") ?><?php mixin__user(\"PHP\") ?>"
+			""", """<?php function mixin__user($name, $block = null) { ?><div class="user"><?= htmlspecialchars($name) ?></div><?php } ?><?php mixin__user("Node") ?><?php mixin__user("JS") ?><?php mixin__user("PHP") ?>"""
 		it 'name with dashes', ->
 			c """
 				mixin user-name(firstName, lastName)
@@ -253,7 +253,47 @@ describe 'JadePhpCompiler', ->
 
 				+user-name("Node", "JS")
 				+user-name("Jade", "PHP")
-			""", "<?php function mixin__user_name($firstName, $lastName) { ?><span class=\"user-name\"><?= $firstName ?> <?= $lastName ?></span><?php } ?><?php mixin__user_name(\"Node\", \"JS\") ?><?php mixin__user_name(\"Jade\", \"PHP\") ?>"
+			""", """<?php function mixin__user_name($firstName, $lastName, $block = null) { ?><span class="user-name"><?= $firstName ?> <?= $lastName ?></span><?php } ?><?php mixin__user_name("Node", "JS") ?><?php mixin__user_name("Jade", "PHP") ?>"""
+
+		it 'support mixin blocks', ->
+			c """
+				mixin article(title)
+					.article
+						.article-wrapper
+							h1= title
+							if block
+								block
+							else
+								p No content provided
+
+				+article('Hello world')
+
+				+article('Hello world')
+					p This is my
+					p Amazing article
+			""", """<?php function mixin__article($title, $block = null) { ?><div class="article"><div class="article-wrapper"><h1><?= htmlspecialchars($title) ?></h1><?php if ($block) : ?><?php if (is_callable($block)) $block(); ?><?php else : ?><p>No content provided</p><?php endif ?></div></div><?php } ?><?php mixin__article('Hello world') ?><?php mixin__article('Hello world', function(){ ?><p>This is my</p><p>Amazing article</p><?php }) ?>"""
+
+		it 'support call mixin inside mixin with blocks', ->
+			c """
+				mixin content
+					if block
+						block
+					else
+						p No content provided
+
+				mixin article(title)
+					.article
+						.article-wrapper
+							h1= title
+							+content
+								block
+
+				+article('Hello world')
+
+				+article('Hello world')
+					p This is my
+					p Amazing article
+			""", """<?php function mixin__content($block = null) { ?><?php if ($block) : ?><?php if (is_callable($block)) $block(); ?><?php else : ?><p>No content provided</p><?php endif ?><?php } ?><?php function mixin__article($title, $block = null) { ?><div class="article"><div class="article-wrapper"><h1><?= htmlspecialchars($title) ?></h1><?php mixin__content(function() use ($block) { ?><?php if (is_callable($block)) $block(); ?><?php }) ?></div></div><?php } ?><?php mixin__article('Hello world') ?><?php mixin__article('Hello world', function(){ ?><p>This is my</p><p>Amazing article</p><?php }) ?>"""
 
 	# describe "extends and blocks", ->
 	# 	it "should support extends", ->

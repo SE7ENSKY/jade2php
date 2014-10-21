@@ -51,6 +51,7 @@ Compiler = module.exports = Compiler = (node, options) ->
   @terse = false
   @mixins = {}
   @dynamicMixins = false
+  @insideMixin = false
   @setDoctype options.doctype  if options.doctype
   return
 
@@ -314,9 +315,10 @@ Compiler:: =
   @api public
   ###
   visitMixinBlock: (block) ->
-    @buf.push "jade_indent.push('" + Array(@indents + 1).join("  ") + "');"  if @pp
-    @buf.push "block && block();"
-    @buf.push "jade_indent.pop();"  if @pp
+    # @buf.push "jade_indent.push('" + Array(@indents + 1).join("  ") + "');"  if @pp
+    # @buf.push "block && block();"
+    # @buf.push "jade_indent.pop();"  if @pp
+    @buf.push "<?php if (is_callable($block)) $block(); ?>"
     return
 
   
@@ -397,7 +399,14 @@ Compiler:: =
       # else
       #   @buf.push name + "(" + args + ");"
       # @buf.push "jade_indent.pop();"  if pp
-      @buf.push "<?php mixin__#{phpMixinName}(#{phpAttrs.join ', '}) ?>"
+      if block
+        mixinAttrs = if phpAttrs.length is 0 then "" else "#{phpAttrs.join ', '}, "
+        useBlockPart = if @insideMixin then " use ($block) " else ""
+        @buf.push "<?php mixin__#{phpMixinName}(#{mixinAttrs}function()#{useBlockPart}{ ?>";
+        @visit block
+        @buf.push "<?php }) ?>"
+      else
+        @buf.push "<?php mixin__#{phpMixinName}(#{phpAttrs.join ', '}) ?>"
     else
       mixin_start = @buf.length
       # args = (if args then args.split(",") else [])
@@ -414,9 +423,13 @@ Compiler:: =
       # @visit block
       # @parentIndents--
       # @buf.push "};"
-      @buf.push "<?php function mixin__#{phpMixinName}(#{phpAttrs.join ', '}) { ?>"
+      blockAttr = if phpAttrs.length is 0 then "$block = null" else ", $block = null"
+      @buf.push "<?php function mixin__#{phpMixinName}(#{phpAttrs.join ', '}#{blockAttr}) { ?>"
       @parentIndents++
+      oldInsideMixin = @insideMixin
+      @insideMixin = yes
       @visit block
+      @insideMixin = oldInsideMixin
       @parentIndents--
       @buf.push "<?php } ?>"
       mixin_end = @buf.length
