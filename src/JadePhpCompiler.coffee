@@ -414,10 +414,10 @@ Compiler:: =
       else
         @buf.push "null" if phpAttrs.length > 0 or attributes
 
-      # console.log attrs if attrs
-      if attributes
-        # ToDo: handle attributes
-        @buf.push ", null"
+      if attrs.length > 0
+        @buf.push ", array(" + (for attr in attrs
+          """'#{attr.name}' => #{jsExpressionToPhp attr.val}"""
+        ).join(', ') + ")"
       else
         @buf.push ", null" if phpAttrs.length > 0
 
@@ -661,7 +661,16 @@ Compiler:: =
       if attrs.length
         val = @attrs(attrs)
         attributeBlocks.unshift val
-      @bufferExpression "jade.attrs(jade.merge([" + attributeBlocks.join(",") + "]), " + utils.stringify(@terse) + ")"
+      console.log attributeBlocks, @terse
+      @buffer "<?php $_ = array_merge(" + (for attributeBlock in attributeBlocks
+        if attributeBlock[0] is '{'
+          cc = attributeBlock.replace ///jade\.escape///g, 'htmlspecialchars'
+          console.log cc
+          jsExpressionToPhp cc
+        else
+          jsExpressionToPhp attributeBlock
+      ).join(", ") + "); ?>"
+      # @bufferExpression "jade.attrs(jade.merge([" + attributeBlocks.join(",") + "]), " + utils.stringify(@terse) + ")"
     else @attrs attrs, true  if attrs.length
     return
 
