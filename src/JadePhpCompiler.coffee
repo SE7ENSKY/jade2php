@@ -345,7 +345,7 @@ Compiler:: =
   @api public
   ###
   visitMixin: (mixin) ->
-    name = "jade_mixins["
+    # name = "jade_mixins["
     args = mixin.args or ""
     block = mixin.block
     attrs = mixin.attrs
@@ -360,7 +360,7 @@ Compiler:: =
     dynamic = mixin.name[0] is "#"
     key = mixin.name
     @dynamicMixins = true  if dynamic
-    name += ((if dynamic then mixin.name.substr(2, mixin.name.length - 3) else "\"" + mixin.name + "\"")) + "]"
+    # name += ((if dynamic then mixin.name.substr(2, mixin.name.length - 3) else "\"" + mixin.name + "\"")) + "]"
     @mixins[key] = @mixins[key] or
       used: false
       instances: []
@@ -692,7 +692,22 @@ Compiler:: =
       if classes.every(isConstant)
         @buffer runtime.cls(classes.map(toConstant), classEscaping)
       else
-        @bufferExpression "jade.cls([" + classes.join(",") + "], " + utils.stringify(classEscaping) + ")"
+        phpExpr = '<?php $_ = '
+
+        if classes.length > 1
+          phpExpr += 'array(); '
+          for classExpr in classes
+            continue if classExpr is 'null' or classExpr is 'false'
+            phpClassExpr = jsExpressionToPhp classExpr
+            if ///^[a-z_][a-z_A-Z0-9\.]*///.test classExpr
+              phpExpr += "if (is_array(#{phpClassExpr})) { $_ = array_merge($_, #{phpClassExpr}); } else { array_push($_, #{phpClassExpr}); } "
+            else
+              phpExpr += "array_push($_, #{phpClassExpr}); "
+        else
+          phpClassExpr = jsExpressionToPhp classes[0]
+          phpExpr += "is_array(#{phpClassExpr}) ? #{phpClassExpr} : array(#{phpClassExpr}); " 
+        phpExpr += '$_ = array_filter($_); if (!empty($_)) echo \' class="\' . join(" ", $_) . \'"\'; ?>'
+        @buffer phpExpr
     else if classes.length
       if classes.every(isConstant)
         classes = utils.stringify(runtime.joinClasses(classes.map(toConstant).map(runtime.joinClasses).map((cls, i) ->

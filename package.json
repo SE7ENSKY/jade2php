@@ -1,6 +1,6 @@
 {
   "name": "jade2php",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "dependencies": {
     "commander": "^2.4.0",
     "jade": "^1.7.0",

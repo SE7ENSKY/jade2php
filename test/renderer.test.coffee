@@ -228,6 +228,20 @@ describe 'JadePhpCompiler', ->
 					h1 Hello, \#{firstName} \#{lastName}!
 				""", '<?php $firstName = "Node" ?><?php $lastName = "JS" ?><h1>Hello, <?= htmlspecialchars($firstName) ?> <?= htmlspecialchars($lastName) ?>!</h1>'
 
+		describe 'class attribute', ->
+			it 'simple', ->
+				c """
+					- var someClasses = null
+					p(class=someClasses)
+
+					- var someClasses = []
+					p(class=someClasses, class="test")
+
+					- var someClasses = ["single-ended", "push-pull"]
+					p(class=someClasses)
+
+				""", """<?php $someClasses = null ?><p<?php $_ = is_array($someClasses) ? $someClasses : array($someClasses); $_ = array_filter($_); if (!empty($_)) echo ' class="' . join(" ", $_) . '"'; ?>></p><?php $someClasses = array() ?><p<?php $_ = array(); if (is_array($someClasses)) { $_ = array_merge($_, $someClasses); } else { array_push($_, $someClasses); } array_push($_, "test"); $_ = array_filter($_); if (!empty($_)) echo ' class="' . join(" ", $_) . '"'; ?>></p><?php $someClasses = array("single-ended", "push-pull") ?><p<?php $_ = is_array($someClasses) ? $someClasses : array($someClasses); $_ = array_filter($_); if (!empty($_)) echo ' class="' . join(" ", $_) . '"'; ?>></p>"""
+
 	describe 'mixins', ->
 		it 'simple', ->
 			c """
@@ -294,9 +308,3 @@ describe 'JadePhpCompiler', ->
 					p This is my
 					p Amazing article
 			""", """<?php function mixin__content($block = null) { ?><?php if ($block) : ?><?php if (is_callable($block)) $block(); ?><?php else : ?><p>No content provided</p><?php endif ?><?php } ?><?php function mixin__article($title, $block = null) { ?><div class="article"><div class="article-wrapper"><h1><?= htmlspecialchars($title) ?></h1><?php mixin__content(function() use ($block) { ?><?php if (is_callable($block)) $block(); ?><?php }) ?></div></div><?php } ?><?php mixin__article('Hello world') ?><?php mixin__article('Hello world', function(){ ?><p>This is my</p><p>Amazing article</p><?php }) ?>"""
-
-	# describe "extends and blocks", ->
-	# 	it "should support extends", ->
-	# 		c """
-	# 			extends rootTemplate
-	# 		""", "gg"
