@@ -352,6 +352,8 @@ Compiler:: =
     attrsBlocks = mixin.attributeBlocks
 
     args = (if args then args.split(",") else [])
+    rest = undefined
+    rest = args.pop().trim().replace(/^\.\.\./, "")  if args.length and /^\.\.\./.test(args[args.length - 1].trim())
     phpAttrs = (jsExpressionToPhp arg for arg in args)
 
     phpMixinName = mixin.name.replace ///-///, '_'
@@ -399,19 +401,31 @@ Compiler:: =
       # else
       #   @buf.push name + "(" + args + ");"
       # @buf.push "jade_indent.pop();"  if pp
+      @buf.push "<?php mixin__#{phpMixinName}("
+
+      attributes = null
+
       if block
-        mixinAttrs = if phpAttrs.length is 0 then "" else "#{phpAttrs.join ', '}, "
-        useBlockPart = if @insideMixin then " use ($block) " else ""
-        @buf.push "<?php mixin__#{phpMixinName}(#{mixinAttrs}function()#{useBlockPart}{ ?>";
+        @buf.push "function()"
+        @buf.push " use ($block) " if @insideMixin
+        @buf.push "{ ?>"
         @visit block
-        @buf.push "<?php }) ?>"
+        @buf.push "<?php }"
       else
-        @buf.push "<?php mixin__#{phpMixinName}(#{phpAttrs.join ', '}) ?>"
+        @buf.push "null" if phpAttrs.length > 0 or attributes
+
+      # console.log attrs if attrs
+      if attributes
+        # ToDo: handle attributes
+        @buf.push ", null"
+      else
+        @buf.push ", null" if phpAttrs.length > 0
+
+      @buf.push ", #{phpAttrs.join ', '}" if phpAttrs.length > 0
+      @buf.push ") ?>"
     else
       mixin_start = @buf.length
       # args = (if args then args.split(",") else [])
-      rest = undefined
-      rest = args.pop().trim().replace(/^\.\.\./, "")  if args.length and /^\.\.\./.test(args[args.length - 1].trim())
       # @buf.push name + " = function(" + args.join(",") + "){"
       # @buf.push "var block = (this && this.block), attributes = (this && this.attributes) || {};"
       # if rest
@@ -423,8 +437,12 @@ Compiler:: =
       # @visit block
       # @parentIndents--
       # @buf.push "};"
-      blockAttr = if phpAttrs.length is 0 then "$block = null" else ", $block = null"
-      @buf.push "<?php function mixin__#{phpMixinName}(#{phpAttrs.join ', '}#{blockAttr}) { ?>"
+      mixinAttrs = ['$block = null', '$attributes = null']
+      mixinAttrs.push phpAttrs.join(', ') if phpAttrs.length > 0
+      @buf.push "<?php function mixin__#{phpMixinName}(#{mixinAttrs.join ', '}) { "
+      if rest
+        @buf.push "#{jsExpressionToPhp rest} = array_slice(func_get_args(), #{mixinAttrs.length}); "
+      @buf.push "?>"
       @parentIndents++
       oldInsideMixin = @insideMixin
       @insideMixin = yes
