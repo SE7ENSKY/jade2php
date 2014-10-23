@@ -1,3 +1,4 @@
+box: wercker/nodejs
 services:
   - zmsaunders/php-node@0.0.5
 # Build definition
