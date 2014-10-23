@@ -413,8 +413,6 @@ Compiler:: =
       # @buf.push "jade_indent.pop();"  if pp
       @buf.push "<?php mixin__#{phpMixinName}("
 
-      attributes = null
-
       if block
         @buf.push "function()"
         @buf.push " use ($block) " if @insideMixin
@@ -422,7 +420,7 @@ Compiler:: =
         @visit block
         @buf.push "<?php }"
       else
-        @buf.push "null" if phpArgs or attributes
+        @buf.push "null" if phpArgs or attrs.length > 0
 
       if attrs.length > 0
         preMergedAttrs = {}
@@ -456,7 +454,7 @@ Compiler:: =
       # @buf.push "};"
       mixinAttrs = ['$block = null', '$attributes = null']
       mixinAttrs.push phpArgs if phpArgs
-      @buf.push "<?php function mixin__#{phpMixinName}(#{mixinAttrs.join ', '}) { "
+      @buf.push "<?php if (!function_exists('mixin__#{phpMixinName}')) { function mixin__#{phpMixinName}(#{mixinAttrs.join ', '}) { "
       if rest
         @buf.push "#{jsExpressionToPhp rest} = array_slice(func_get_args(), #{mixinAttrs.length}); "
       @buf.push "?>"
@@ -466,7 +464,7 @@ Compiler:: =
       @visit block
       @insideMixin = oldInsideMixin
       @parentIndents--
-      @buf.push "<?php } ?>"
+      @buf.push "<?php } } ?>"
       mixin_end = @buf.length
       @mixins[key].instances.push
         start: mixin_start
