@@ -1,27 +1,15 @@
 chai = require('chai')
 chai.should()
 
+jade = require 'jade'
+jade2php = require '../src/jade2php'
+phpRuntimeCode = require '../src/phpRuntimeCode'
+
 describe 'JadePhpCompiler', ->
-	JadePhpCompiler = null
-	jade = null
-
-	describe 'dependencies and methods', ->
-		it 'jade is present', ->
-			jade = require 'jade'
-			jade.should.not.eql.null
-		it 'should be defined', ->
-			JadePhpCompiler = require '../src/JadePhpCompiler'
-			JadePhpCompiler.should.not.eql.null
-		it 'have .compile method', ->
-			JadePhpCompiler.prototype.compile.should.not.eql.null
-
-	parse = (str, options = { filename: '' }) ->
-		parser = new jade.Parser str, options.filename, options
-		tokens = parser.parse()
-		compiler = new JadePhpCompiler tokens, options
-		compiler.compile()
-	c = (jadeSrc, htmlOutput) ->
-		parse(jadeSrc).should.eql(htmlOutput)
+	c = (jadeSrc, referenceCode) ->
+		compiledPhp = jade2php jadeSrc
+		compiledPhp = compiledPhp.replace phpRuntimeCode, ''
+		compiledPhp.should.eql referenceCode
 
 	describe 'rendering simple jade syntax into vanilla html', ->
 
@@ -73,10 +61,10 @@ describe 'JadePhpCompiler', ->
 			c '!= value', '<?= $value ?>'
 
 		it 'should support attr values', ->
-			c 'div(data-value=someValue)', "<div<?= ($_ = $someValue) ? (' data-value=\"' . htmlspecialchars($_) . '\"') : '' ?>></div>"
+			c 'div(data-value=someValue)', "<div<?php attr('data-value', $someValue, true) ?>></div>"
 		
 		it 'should support attr unescaped values', ->
-			c 'div(data-value!=someValue)', "<div<?= ($_ = $someValue) ? (' data-value=\"' . $_ . '\"') : '' ?>></div>"
+			c 'div(data-value!=someValue)', "<div<?php attr('data-value', $someValue, false) ?>></div>"
 		
 		it 'should support tag text', ->
 			c 'div= someText', '<div><?= htmlspecialchars($someText) ?></div>'
@@ -85,7 +73,7 @@ describe 'JadePhpCompiler', ->
 			c 'div!= someText', '<div><?= $someText ?></div>'
 
 		it 'should support several attrs and text', ->
-			c 'a(href=url, title=title)= title', "<a<?= ($_ = $url) ? (' href=\"' . htmlspecialchars($_) . '\"') : '' ?><?= ($_ = $title) ? (' title=\"' . htmlspecialchars($_) . '\"') : '' ?>><?= htmlspecialchars($title) ?></a>"
+			c 'a(href=url, title=title)= title', "<a<?php attr('href', $url, true) ?><?php attr('title', $title, true) ?>><?= htmlspecialchars($title) ?></a>"
 
 	describe 'string interpolation', ->
 
@@ -137,7 +125,7 @@ describe 'JadePhpCompiler', ->
 							.test-result another 1
 						else if another2TestCondition
 							.test-result another 2
-					""", '<?php if ($testCondition) : ?><div class="test-result">passed</div><?php else if ($another1TestCondition) : ?><div class="test-result">another 1</div><?php else if ($another2TestCondition) : ?><div class="test-result">another 2</div><?php endif ?>'
+					""", '<?php if ($testCondition) : ?><div class="test-result">passed</div><?php elseif ($another1TestCondition) : ?><div class="test-result">another 1</div><?php elseif ($another2TestCondition) : ?><div class="test-result">another 2</div><?php endif ?>'
 					c """
 						.test-result
 							if testCondition
@@ -148,7 +136,7 @@ describe 'JadePhpCompiler', ->
 								| another 2
 							else
 								| failed
-					""", '<div class="test-result"><?php if ($testCondition) : ?>passed<?php else if ($another1TestCondition) : ?>another 1<?php else if ($another2TestCondition) : ?>another 2<?php else : ?>failed<?php endif ?></div>'
+					""", '<div class="test-result"><?php if ($testCondition) : ?>passed<?php elseif ($another1TestCondition) : ?>another 1<?php elseif ($another2TestCondition) : ?>another 2<?php else : ?>failed<?php endif ?></div>'
 					c """
 						.test-result
 							if oneBranch
@@ -215,32 +203,32 @@ describe 'JadePhpCompiler', ->
 						.error No users found
 				""", '<?php if ($users) : foreach ($users as $user) : ?><div class="user"><?= htmlspecialchars($user) ?></div><?php endforeach; else : ?><div class="error">No users found</div><?php endif ?>'
 
-		describe 'code node', ->
-			it 'simple', ->
-				c """
-					- var name = "NodeJS"
-					h1 Hello, \#{name}!
-				""", '<?php $name = "NodeJS" ?><h1>Hello, <?= htmlspecialchars($name) ?>!</h1>'
-				
-				c """
-					- var firstName = "Node"
-					- var lastName = "JS"
-					h1 Hello, \#{firstName} \#{lastName}!
-				""", '<?php $firstName = "Node" ?><?php $lastName = "JS" ?><h1>Hello, <?= htmlspecialchars($firstName) ?> <?= htmlspecialchars($lastName) ?>!</h1>'
+	describe 'code node', ->
+		it 'simple', ->
+			c """
+				- var name = "NodeJS"
+				h1 Hello, \#{name}!
+			""", '<?php $name = "NodeJS" ?><h1>Hello, <?= htmlspecialchars($name) ?>!</h1>'
+			
+			c """
+				- var firstName = "Node"
+				- var lastName = "JS"
+				h1 Hello, \#{firstName} \#{lastName}!
+			""", '<?php $firstName = "Node" ?><?php $lastName = "JS" ?><h1>Hello, <?= htmlspecialchars($firstName) ?> <?= htmlspecialchars($lastName) ?>!</h1>'
 
-		describe 'class attribute', ->
-			it 'simple', ->
-				c """
-					- var someClasses = null
-					p(class=someClasses)
+	describe 'class attribute', ->
+		it 'simple', ->
+			c """
+				- var someClasses = null
+				p(class=someClasses)
 
-					- var someClasses = []
-					p(class=someClasses, class="test")
+				- var someClasses = []
+				p(class=someClasses, class="test")
 
-					- var someClasses = ["single-ended", "push-pull"]
-					p(class=someClasses)
+				- var someClasses = ["single-ended", "push-pull"]
+				p(class=someClasses)
 
-				""", """<?php $someClasses = null ?><p<?php $_ = is_array($someClasses) ? $someClasses : array($someClasses); $_ = array_filter($_); if (!empty($_)) echo ' class="' . join(" ", $_) . '"'; ?>></p><?php $someClasses = array() ?><p<?php $_ = array(); if (is_array($someClasses)) { $_ = array_merge($_, $someClasses); } else { array_push($_, $someClasses); } array_push($_, "test"); $_ = array_filter($_); if (!empty($_)) echo ' class="' . join(" ", $_) . '"'; ?>></p><?php $someClasses = array("single-ended", "push-pull") ?><p<?php $_ = is_array($someClasses) ? $someClasses : array($someClasses); $_ = array_filter($_); if (!empty($_)) echo ' class="' . join(" ", $_) . '"'; ?>></p>"""
+			""", "<?php $someClasses = null ?><p<?php attr_class($someClasses) ?>></p><?php $someClasses = array() ?><p<?php attr_class($someClasses, \"test\") ?>></p><?php $someClasses = array(\"single-ended\", \"push-pull\") ?><p<?php attr_class($someClasses) ?>></p>"
 
 	describe 'mixins', ->
 		it 'simple', ->
@@ -329,4 +317,4 @@ describe 'JadePhpCompiler', ->
 							li= item
 
 				+list('my-list', 1, 2, 3, 4)
-			""", """<?php function mixin__list($block = null, $attributes = null, $id) { $items = array_slice(func_get_args(), 3); ?><ul<?= ($_ = $id) ? (' id="' . htmlspecialchars($_) . '"') : '' ?>><?php if ($items) : foreach ($items as $item) : ?><li><?= htmlspecialchars($item) ?></li><?php endforeach; endif ?></ul><?php } ?><?php mixin__list(null, null, 'my-list', 1, 2, 3, 4) ?>"""
+			""", "<?php function mixin__list($block = null, $attributes = null, $id) { $items = array_slice(func_get_args(), 3); ?><ul<?php attr('id', $id, true) ?>><?php if ($items) : foreach ($items as $item) : ?><li><?= htmlspecialchars($item) ?></li><?php endforeach; endif ?></ul><?php } ?><?php mixin__list(null, null, 'my-list', 1, 2, 3, 4) ?>"

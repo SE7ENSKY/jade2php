@@ -140,10 +140,177 @@ describe 'Jade Language Reference', ->
 		test 'Class Literal (default tag is div)', '.content'
 		test 'ID Literal', 'a#main-link'
 		test 'ID Literal (default tag is div)', '#content'
-		# test '&attributes', """
-		# 	div#foo(data-bar="foo")&attributes({'data-foo': 'bar'})
-		# """
-		# test '&attributes(variable)', """
-		# 	- var attributes = {'data-foo': 'bar'};
-		# 	div#foo(data-bar="foo")&attributes(attributes)
-		# """
+		test '&attributes', """
+			div#foo(data-bar="foo")&attributes({'data-foo': 'bar'})
+		"""
+		test '&attributes(variable)', """
+			- var attributes = {'data-foo': 'bar'};
+			div#foo(data-bar="foo")&attributes(attributes)
+		"""
+	
+	describe 'Code & Interpolation', ->
+		test 'Unbuffered Code', """
+			- for (var x = 0; x < 3; x++)
+			  li item
+		"""
+		test 'Buffered Code', """
+			p
+			  = 'This code is <escaped>!'
+		"""
+		test 'Buffered Code (JavaScript expressions)', """
+			p= 'This code is' + ' <escaped>!'
+		"""
+		test 'Unescaped Buffered Code', """
+			p
+			  != 'This code is <strong>not</strong> escaped!'
+		"""
+		test 'Unescaped Buffered Code (JavaScript expressions)', """
+			p!= 'This code is <strong>not</strong> escaped!'
+		"""
+		test 'Interpolation', """
+			- var user = {name: 'Forbes Lindesay'}
+			p Welcome \#{user.name}
+		"""
+		test 'Unescaped Interpolation', """
+			- var user = {name: '<strong>Forbes Lindesay</strong>'}
+			p Welcome \#{user.name}
+			p Welcome !{user.name}
+		"""
+
+	describe 'Conditionals', ->
+		test 'Conditionals', """
+			- var user = { description: 'foo bar baz' }
+			- var authorised = false
+			#user
+			  if user.description
+			    h2 Description
+			    p.description= user.description
+			  else if authorised
+			    h2 Description
+			    p.description.
+			      User has no description,
+			      why not add one...
+			  else
+			    h1 Description
+			    p.description User has no description
+		"""
+		test "Unless", """
+			- var user = { name: 'Username' }
+			unless user.isAnonymous
+			  p You're logged in as \#{user.name}
+		"""
+
+	describe 'Case', ->
+		test 'Case', """
+			- var friends = 10
+			case friends
+			  when 0
+			    p you have no friends
+			  when 1
+			    p you have a friend
+			  default
+			    p you have \#{friends} friends
+		"""
+		test 'Case Fall Through', """
+			- var friends = 0
+			case friends
+			  when 0
+			  when 1
+			    p you have very few friends
+			  default
+			    p you have \#{friends} friends
+		"""
+		test 'Block Expansion', """
+			- var friends = 1
+			case friends
+			  when 0: p you have no friends
+			  when 1: p you have a friend
+			  default: p you have \#{friends} friends
+		"""
+
+	describe 'Iteration', ->
+		test 'each', """
+			ul
+			  each val in [1, 2, 3, 4, 5]
+			    li= val
+		"""
+		test 'index', """
+			ul
+			  each val, index in ['zero', 'one', 'two']
+			    li= index + ': ' + val
+		"""
+		test 'keys', """
+			ul
+			  each val, index in {1:'one',2:'two',3:'three'}
+			    li= index + ': ' + val
+		"""
+		test 'tern', """
+			- var values = [];
+			ul
+			  each val in values.length ? values : ['There are no values']
+			    li= val
+		"""
+		test 'while', """
+			- var n = 0
+			ul
+			  while n < 4
+			    li= n++
+		"""
+
+	describe 'Mixins', ->
+		test 'Mixins', """
+			//- Declaration
+			mixin list
+			  ul
+			    li foo
+			    li bar
+			    li baz
+			//- Use
+			+list
+			+list
+		"""
+		test 'Mixins with arguments', """
+			mixin pet(name)
+			  li.pet= name
+			ul
+			  +pet('cat')
+			  +pet('dog')
+			  +pet('pig')
+		"""
+		test 'Mixin Blocks', """
+			mixin article(title)
+			  .article
+			    .article-wrapper
+			      h1= title
+			      if block
+			        block
+			      else
+			        p No content provided
+
+			+article('Hello world')
+
+			+article('Hello world')
+			  p This is my
+			  p Amazing article
+		"""
+		test 'Mixin Attributes', """
+			mixin link(href, name)
+			  //- attributes == {class: "btn"}
+			  a(class!=attributes.class, href=href)= name
+
+			+link('/foo', 'foo')(class="btn")
+		"""
+		test 'Mixin &attributes', """
+			mixin link(href, name)
+			  a(href=href)&attributes(attributes)= name
+
+			+link('/foo', 'foo')(class="btn")
+		"""
+		test 'Rest Arguments', """
+			mixin list(id, ...items)
+			  ul(id=id)
+			    each item in items
+			      li= item
+
+			+list('my-list', 1, 2, 3, 4)
+		"""

@@ -13,13 +13,13 @@ errorAtNode = (node, error) ->
   error.filename = node.filename
   error
 
-js2php = require 'js2php'
-jsExpressionToPhp = (jsExpr) ->
-  phpCode = js2php jsExpr
-  phpCode.replace(///^<\?php\n///g, "").replace(///;\n$///g, "")
+jsExpressionToPhp = require './jsExpressionToPhp'
 
 IF_REGEX = ///^if\s\(\s?(.*)\)$///
 ELSE_IF_REGEX = ///^else\s+if\s+\(\s?(.*)\)$///
+LOOP_REGEX = ///^(for|while)\s*\((.+)\)$///
+
+phpRuntimeCode = require './phpRuntimeCode'
 
 "use strict"
 
@@ -90,7 +90,7 @@ Compiler:: =
               y++
             x++
         i++
-    @buf.join if @pp then "\n" else ""
+    phpRuntimeCode + @buf.join if @pp then "\n" else ""
 
   
   ###*
@@ -601,6 +601,8 @@ Compiler:: =
         nextElses: @nextElses
     else if ///^else///.test code.val
       # ignore else and else-if, they was catched in @nextElses when processing first if
+    else if LOOP_REGEX.test code.val
+      @visitLoop code
     else
       @buf.push "<?php #{jsExpressionToPhp code.val} ?>"
     
@@ -610,6 +612,14 @@ Compiler:: =
         @visit code.block
         # @buf.push " ?>"  unless code.buffer
     return
+
+  visitLoop: (loopNode) ->
+    m = loopNode.val.match LOOP_REGEX
+    loopType = m[1]
+    conditions = m[2]
+    @buf.push "<?php #{loopType} (#{jsExpressionToPhp conditions}) : ?>"
+    @visit loopNode.block if loopNode.block
+    @buf.push "<?php end#{loopType} ?>"
 
   visitIf: (ifNode) ->
     @buf.push "<?php if (#{jsExpressionToPhp ifNode.condition}) : ?>"
@@ -624,7 +634,7 @@ Compiler:: =
         else if ELSE_IF_REGEX.test alternative.val
           m = alternative.val.match ELSE_IF_REGEX
           condition = m[1]
-          @buf.push "<?php else if (#{jsExpressionToPhp condition}) : ?>"
+          @buf.push "<?php elseif (#{jsExpressionToPhp condition}) : ?>"
           @visit alternative.block
       @buf.push "<?php endif ?>"
   
@@ -661,11 +671,9 @@ Compiler:: =
       if attrs.length
         val = @attrs(attrs)
         attributeBlocks.unshift val
-      console.log attributeBlocks, @terse
-      @buffer "<?php $_ = array_merge(" + (for attributeBlock in attributeBlocks
+      @buffer "<?php attrs(" + (for attributeBlock in attributeBlocks
         if attributeBlock[0] is '{'
           cc = attributeBlock.replace ///jade\.escape///g, 'htmlspecialchars'
-          console.log cc
           jsExpressionToPhp cc
         else
           jsExpressionToPhp attributeBlock
@@ -699,7 +707,8 @@ Compiler:: =
         if buffer
           # @bufferExpression "jade.attr(\"" + key + "\", " + attr.val + ", " + utils.stringify(escaped) + ", " + utils.stringify(@terse) + ")"
           if ///^[a-z_][a-z_A-Z0-9]*$///.test attr.val
-            @bufferExpression "<?= ($_ = #{jsExpressionToPhp attr.val}) ? (' #{key}=\"' . #{if escaped then 'htmlspecialchars($_)' else '$_'} . '\"') : '' ?>"
+            # @bufferExpression "<?= ($_ = #{jsExpressionToPhp attr.val}) ? (' #{key}=\"' . #{if escaped then 'htmlspecialchars($_)' else '$_'} . '\"') : '' ?>"
+            @bufferExpression "<?php attr('#{key}', #{jsExpressionToPhp attr.val}, #{if escaped then 'true' else 'false'}) ?>"
           else
             jsString = attr.val
             jadeString = jsString.replace(///^"///, '').replace(///"$///, '')
@@ -719,22 +728,27 @@ Compiler:: =
       if classes.every(isConstant)
         @buffer runtime.cls(classes.map(toConstant), classEscaping)
       else
-        phpExpr = '<?php $_ = '
+        # phpExpr = '<?php $_ = '
 
-        if classes.length > 1
-          phpExpr += 'array(); '
-          for classExpr in classes
-            continue if classExpr is 'null' or classExpr is 'false'
-            phpClassExpr = jsExpressionToPhp classExpr
-            if ///^[a-z_][a-z_A-Z0-9\.]*///.test classExpr
-              phpExpr += "if (is_array(#{phpClassExpr})) { $_ = array_merge($_, #{phpClassExpr}); } else { array_push($_, #{phpClassExpr}); } "
-            else
-              phpExpr += "array_push($_, #{phpClassExpr}); "
+        # if classes.length > 1
+        #   phpExpr += 'array(); '
+        #   for classExpr in classes
+        #     continue if classExpr is 'null' or classExpr is 'false'
+        #     phpClassExpr = jsExpressionToPhp classExpr
+        #     if ///^[a-z_][a-z_A-Z0-9\.]*///.test classExpr
+        #       phpExpr += "if (is_array(#{phpClassExpr})) { $_ = array_merge($_, #{phpClassExpr}); } else { array_push($_, #{phpClassExpr}); } "
+        #     else
+        #       phpExpr += "array_push($_, #{phpClassExpr}); "
+        # else
+        #   phpClassExpr = jsExpressionToPhp classes[0]
+        #   phpExpr += "is_array(#{phpClassExpr}) ? #{phpClassExpr} : array(#{phpClassExpr}); " 
+        # phpExpr += '$_ = array_filter($_); if (!empty($_)) echo \' class="\' . join(" ", $_) . \'"\'; ?>'
+        # @buffer phpExpr
+        attrClassArgs = if classes.length is 1
+          jsExpressionToPhp classes[0]
         else
-          phpClassExpr = jsExpressionToPhp classes[0]
-          phpExpr += "is_array(#{phpClassExpr}) ? #{phpClassExpr} : array(#{phpClassExpr}); " 
-        phpExpr += '$_ = array_filter($_); if (!empty($_)) echo \' class="\' . join(" ", $_) . \'"\'; ?>'
-        @buffer phpExpr
+          (jsExpressionToPhp c for c in classes).join ', '
+        @buffer "<?php attr_class(#{attrClassArgs}) ?>"
     else if classes.length
       if classes.every(isConstant)
         classes = utils.stringify(runtime.joinClasses(classes.map(toConstant).map(runtime.joinClasses).map((cls, i) ->
