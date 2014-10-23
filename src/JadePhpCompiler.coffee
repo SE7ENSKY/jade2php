@@ -721,7 +721,7 @@ Compiler:: =
       else
         if buffer
           # @bufferExpression "jade.attr(\"" + key + "\", " + attr.val + ", " + utils.stringify(escaped) + ", " + utils.stringify(@terse) + ")"
-          if ///^[a-zA-Z_][a-z_A-Z0-9]*$///.test attr.val
+          if ///^[a-zA-Z_][a-z_A-Z0-9]*///.test attr.val
             # @bufferExpression "<?= ($_ = #{jsExpressionToPhp attr.val}) ? (' #{key}=\"' . #{if escaped then 'htmlspecialchars($_)' else '$_'} . '\"') : '' ?>"
             @bufferExpression "<?php attr('#{key}', #{jsExpressionToPhp attr.val}, #{if escaped then 'true' else 'false'}) ?>"
           else
