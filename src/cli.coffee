@@ -17,6 +17,7 @@ options = {}
 program
 	.version(require('../package.json').version)
 	.usage('[options] [dir|file ...]')
+	.option('--omit-php-runtime', 'don\'t include php runtime into compiled templates')
 	.option('-O, --obj <str>', 'javascript options object')
 	.option('-o, --out <dir>', 'output the compiled html to <dir>')
 	.option('-p, --path <path>', 'filename used to resolve includes')
@@ -57,6 +58,7 @@ if program.obj
 	else
 		eval '(' + program.obj + ')'
 
+options.omitPhpRuntime = true if program.omitPhpRuntime
 options.filename = program.path if program.path
 options.watch = program.watch
 files = program.args
@@ -103,6 +105,7 @@ renderFile = (path) ->
 				throw err  if err
 				options.filename = path
 				options.name = getNameFromFileName(path)  if program.nameAfterFile
+				console.log "transpiling #{path}"
 				compiledPhp = transpileJadeToPhp str, options
 				extname = ".php"
 				path = path.replace(re, extname)

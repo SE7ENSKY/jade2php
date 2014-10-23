@@ -45,6 +45,7 @@ Compiler = module.exports = Compiler = (node, options) ->
   @hasCompiledDoctype = false
   @hasCompiledTag = false
   @pp = options.pretty or false
+  @omitPhpRuntime = options.omitPhpRuntime or false
   @debug = false isnt options.compileDebug
   @indents = 0
   @parentIndents = 0
@@ -67,30 +68,37 @@ Compiler:: =
   @api public
   ###
   compile: ->
-    @buf = []
-    @buf.push "var jade_indent = [];"  if @pp
-    @lastBufferedIdx = -1
-    @visit @node
-    unless @dynamicMixins
-      
-      # if there are no dynamic mixins we can remove any un-used mixins
-      mixinNames = Object.keys(@mixins)
-      i = 0
+    try
+      @buf = []
+      @buf.push "var jade_indent = [];"  if @pp
+      @lastBufferedIdx = -1
+      @visit @node
+      unless @dynamicMixins
+        
+        # if there are no dynamic mixins we can remove any un-used mixins
+        mixinNames = Object.keys(@mixins)
+        i = 0
 
-      while i < mixinNames.length
-        mixin = @mixins[mixinNames[i]]
-        unless mixin.used
-          x = 0
+        while i < mixinNames.length
+          mixin = @mixins[mixinNames[i]]
+          unless mixin.used
+            x = 0
 
-          while x < mixin.instances.length
-            y = mixin.instances[x].start
+            while x < mixin.instances.length
+              y = mixin.instances[x].start
 
-            while y < mixin.instances[x].end
-              @buf[y] = ""
-              y++
-            x++
-        i++
-    phpRuntimeCode + @buf.join if @pp then "\n" else ""
+              while y < mixin.instances[x].end
+                @buf[y] = ""
+                y++
+              x++
+          i++
+      result = ''
+      result += phpRuntimeCode unless @omitPhpRuntime
+      result += @buf.join if @pp then "\n" else ""
+      result
+    catch e
+      console.error "Error transpiling Jade to PHP"
+      throw e
 
   
   ###*
@@ -351,10 +359,12 @@ Compiler:: =
     attrs = mixin.attrs
     attrsBlocks = mixin.attributeBlocks
 
-    args = (if args then args.split(",") else [])
     rest = undefined
-    rest = args.pop().trim().replace(/^\.\.\./, "")  if args.length and /^\.\.\./.test(args[args.length - 1].trim())
-    phpAttrs = (jsExpressionToPhp arg for arg in args)
+    if args and ///\.\.\.[a-zA-Z_][a-z_A-Z0-9]*\s*$///.test args
+      args = args.split(',')
+      rest = args.pop().trim().replace(/^\.\.\./, "")
+      args = if args.length > 0 then args.join(',') else undefined
+    phpArgs = if args then jsExpressionToPhp(args).replace(///;$///, '') else undefined
 
     phpMixinName = mixin.name.replace ///-///, '_'
 
@@ -412,16 +422,23 @@ Compiler:: =
         @visit block
         @buf.push "<?php }"
       else
-        @buf.push "null" if phpAttrs.length > 0 or attributes
+        @buf.push "null" if phpArgs or attributes
 
       if attrs.length > 0
-        @buf.push ", array(" + (for attr in attrs
-          """'#{attr.name}' => #{jsExpressionToPhp attr.val}"""
+        preMergedAttrs = {}
+        for attr in attrs
+          if attr.name is 'class'
+            preMergedAttrs.class = [] unless preMergedAttrs.class
+            preMergedAttrs.class.push attr.val
+          else
+            preMergedAttrs[attr.name] = attr.val
+        @buf.push ", array(" + (for key, value of preMergedAttrs
+          """'#{key}' => #{jsExpressionToPhp if key is 'class' then "[#{value}]" else value}"""
         ).join(', ') + ")"
       else
-        @buf.push ", null" if phpAttrs.length > 0
+        @buf.push ", null" if phpArgs
 
-      @buf.push ", #{phpAttrs.join ', '}" if phpAttrs.length > 0
+      @buf.push ", #{phpArgs}" if phpArgs
       @buf.push ") ?>"
     else
       mixin_start = @buf.length
@@ -438,7 +455,7 @@ Compiler:: =
       # @parentIndents--
       # @buf.push "};"
       mixinAttrs = ['$block = null', '$attributes = null']
-      mixinAttrs.push phpAttrs.join(', ') if phpAttrs.length > 0
+      mixinAttrs.push phpArgs if phpArgs
       @buf.push "<?php function mixin__#{phpMixinName}(#{mixinAttrs.join ', '}) { "
       if rest
         @buf.push "#{jsExpressionToPhp rest} = array_slice(func_get_args(), #{mixinAttrs.length}); "
@@ -706,7 +723,7 @@ Compiler:: =
       else
         if buffer
           # @bufferExpression "jade.attr(\"" + key + "\", " + attr.val + ", " + utils.stringify(escaped) + ", " + utils.stringify(@terse) + ")"
-          if ///^[a-z_][a-z_A-Z0-9]*$///.test attr.val
+          if ///^[a-zA-Z_][a-z_A-Z0-9]*$///.test attr.val
             # @bufferExpression "<?= ($_ = #{jsExpressionToPhp attr.val}) ? (' #{key}=\"' . #{if escaped then 'htmlspecialchars($_)' else '$_'} . '\"') : '' ?>"
             @bufferExpression "<?php attr('#{key}', #{jsExpressionToPhp attr.val}, #{if escaped then 'true' else 'false'}) ?>"
           else

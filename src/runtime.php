@@ -15,7 +15,7 @@ function attrs() {
 		foreach ($arg as $key => $value) {
 			if ($key == 'class') {
 				if (!isset($attrs[$key])) $attrs[$key] = array();
-				$attrs[$key] = array_merge($attrs[$key], explode(' ', $value));
+				$attrs[$key] = array_merge($attrs[$key], is_array($value) ? $value : explode(' ', $value));
 			} else {
 				$attrs[$key] = $value;
 			}
