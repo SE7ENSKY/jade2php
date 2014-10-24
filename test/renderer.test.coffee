@@ -189,19 +189,19 @@ describe 'JadePhpCompiler', ->
 				c """
 					each user in users
 						.user= user
-				""", '<?php if ($users) : foreach ($users as $user) : ?><div class="user"><?= htmlspecialchars($user) ?></div><?php endforeach; endif ?>'
+				""", '<?php if ($users) : foreach ($users as $user) : $■[\'user\'] = $user; ?><div class="user"><?= htmlspecialchars($user) ?></div><?php endforeach; endif ?>'
 			it 'simple with indexing', ->
 				c """
 					each value, key in options
 						.option \#{key}: \#{value}
-				""", '<?php if ($options) : foreach ($options as $key => $value) : ?><div class="option"><?= htmlspecialchars($key) ?>: <?= htmlspecialchars($value) ?></div><?php endforeach; endif ?>'
+				""", '<?php if ($options) : foreach ($options as $key => $value) : $■[\'key\'] = $key;$■[\'value\'] = $value; ?><div class="option"><?= htmlspecialchars($key) ?>: <?= htmlspecialchars($value) ?></div><?php endforeach; endif ?>'
 			it 'alternative', ->
 				c """
 					each user in users
 						.user= user
 					else
 						.error No users found
-				""", '<?php if ($users) : foreach ($users as $user) : ?><div class="user"><?= htmlspecialchars($user) ?></div><?php endforeach; else : ?><div class="error">No users found</div><?php endif ?>'
+				""", '<?php if ($users) : foreach ($users as $user) : $■[\'user\'] = $user; ?><div class="user"><?= htmlspecialchars($user) ?></div><?php endforeach; else : ?><div class="error">No users found</div><?php endif ?>'
 
 	describe 'code node', ->
 		it 'simple', ->
@@ -308,7 +308,7 @@ describe 'JadePhpCompiler', ->
 				+sum(1, 2)
 				+sum(5, 5, 12)
 				+sum(5, 5, 12, 1)
-			""", "<?php if (!function_exists('mixin__sum')) { function mixin__sum($block = null, $attributes = null, $a, $b) { $other = array_slice(func_get_args(), 3); ?><?php $result = $a + $b ?><?php if ($other) : foreach ($other as $number) : ?><?php $result += $number ?><?php endforeach; endif ?><div class=\"sum\"><?= htmlspecialchars($result) ?></div><?php } } ?><?php mixin__sum(null, null, 1, 2) ?><?php mixin__sum(null, null, 5, 5, 12) ?><?php mixin__sum(null, null, 5, 5, 12, 1) ?>"
+			""", "<?php if (!function_exists('mixin__sum')) { function mixin__sum($block = null, $attributes = null, $a, $b) { $other = array_slice(func_get_args(), 3); ?><?php $result = add($a, $b) ?><?php if ($other) : foreach ($other as $number) : $■['number'] = $number; ?><?php $result += $number ?><?php endforeach; endif ?><div class=\"sum\"><?= htmlspecialchars($result) ?></div><?php } } ?><?php mixin__sum(null, null, 1, 2) ?><?php mixin__sum(null, null, 5, 5, 12) ?><?php mixin__sum(null, null, 5, 5, 12, 1) ?>"
 
 			c """
 				mixin list(id, ...items)
@@ -317,4 +317,10 @@ describe 'JadePhpCompiler', ->
 							li= item
 
 				+list('my-list', 1, 2, 3, 4)
-			""", "<?php if (!function_exists('mixin__list')) { function mixin__list($block = null, $attributes = null, $id) { $items = array_slice(func_get_args(), 3); ?><ul<?php attr('id', $id, true) ?>><?php if ($items) : foreach ($items as $item) : ?><li><?= htmlspecialchars($item) ?></li><?php endforeach; endif ?></ul><?php } } ?><?php mixin__list(null, null, 'my-list', 1, 2, 3, 4) ?>"
+			""", "<?php if (!function_exists('mixin__list')) { function mixin__list($block = null, $attributes = null, $id) { $items = array_slice(func_get_args(), 3); ?><ul<?php attr('id', $id, true) ?>><?php if ($items) : foreach ($items as $item) : $■['item'] = $item; ?><li><?= htmlspecialchars($item) ?></li><?php endforeach; endif ?></ul><?php } } ?><?php mixin__list(null, null, 'my-list', 1, 2, 3, 4) ?>"
+
+	describe "other mixed tests", ->
+		it 'mixin + class attrs + interpolation', ->
+			c """
+				+e("li").item.col-sm-4(class="delivery-steps__item_\#{deliveryProcessItem.class}")
+			""", "<?php mixin__e(null, array('class' => array('item', 'col-sm-4', add(\"delivery-steps__item_\", $deliveryProcessItem['class'], \"\"))), \"li\") ?>"

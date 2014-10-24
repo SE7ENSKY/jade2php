@@ -668,7 +668,10 @@ Compiler:: =
       jsExpressionToPhp each.val
     else
       "#{jsExpressionToPhp each.key} => #{jsExpressionToPhp each.val}"
-    @buf.push "<?php if (#{jsExpressionToPhp each.obj}) : foreach (#{jsExpressionToPhp each.obj} as #{as}) : ?>"
+    scopePushPhp = ""
+    scopePushPhp += "$■['#{each.key}'] = #{jsExpressionToPhp each.key};" unless each.key is '$index'
+    scopePushPhp += "$■['#{each.val}'] = #{jsExpressionToPhp each.val};"
+    @buf.push "<?php if (#{jsExpressionToPhp each.obj}) : foreach (#{jsExpressionToPhp each.obj} as #{as}) : #{scopePushPhp} ?>"
     @visit each.block
     unless each.alternative
       @buf.push "<?php endforeach; endif ?>"
