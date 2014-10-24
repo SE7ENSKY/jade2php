@@ -461,6 +461,9 @@ Compiler:: =
       @buf.push "<?php if (!function_exists('mixin__#{phpMixinName}')) { function mixin__#{phpMixinName}(#{mixinAttrs.join ', '}) { "
       if rest
         @buf.push "#{jsExpressionToPhp rest} = array_slice(func_get_args(), #{mixinAttrs.length}); "
+      if phpArgs
+        @buf.push "global $■;"
+        @buf.push ("$■['#{phpArg.replace '$', ''}'] = #{phpArg};" for phpArg in phpArgs.split ', ').join ''
       @buf.push "?>"
       @parentIndents++
       oldInsideMixin = @insideMixin
