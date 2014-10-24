@@ -8,6 +8,7 @@ describe 'JadePhpCompiler', ->
 	c = (jadeSrc, referenceCode) ->
 		compiledPhp = jade2php jadeSrc,
 			omitPhpRuntime: yes
+			omitPhpExtractor: yes
 		compiledPhp.should.eql referenceCode
 
 	describe 'rendering simple jade syntax into vanilla html', ->

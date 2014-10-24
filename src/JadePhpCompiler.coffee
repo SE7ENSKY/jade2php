@@ -20,6 +20,7 @@ ELSE_IF_REGEX = ///^else\s+if\s+\(\s?(.*)\)$///
 LOOP_REGEX = ///^(for|while)\s*\((.+)\)$///
 
 phpRuntimeCode = require './phpRuntimeCode'
+phpExtractorCode = require './phpExtractorCode'
 
 "use strict"
 
@@ -46,6 +47,7 @@ Compiler = module.exports = Compiler = (node, options) ->
   @hasCompiledTag = false
   @pp = options.pretty or false
   @omitPhpRuntime = options.omitPhpRuntime or false
+  @omitPhpExtractor = options.omitPhpExtractor or false
   @debug = false isnt options.compileDebug
   @indents = 0
   @parentIndents = 0
@@ -94,6 +96,7 @@ Compiler:: =
           i++
       result = ''
       result += phpRuntimeCode unless @omitPhpRuntime
+      result += phpExtractorCode unless @omitPhpExtractor
       result += @buf.join if @pp then "\n" else ""
       result
     catch e
@@ -417,6 +420,7 @@ Compiler:: =
         @buf.push "function()"
         @buf.push " use ($block) " if @insideMixin
         @buf.push "{ ?>"
+        @buf.push phpExtractorCode unless @omitPhpExtractor
         @visit block
         @buf.push "<?php }"
       else

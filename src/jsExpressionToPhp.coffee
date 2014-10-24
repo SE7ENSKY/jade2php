@@ -3,7 +3,7 @@ jsExpressionToPhp = (jsExpr) ->
 	jsExpr = "(#{jsExpr})" if ///^\{.*\}$///.test jsExpr
 	phpCode = js2php jsExpr
 	phpExpression = phpCode.replace(///^<\?php\n///g, "").replace(///;\n$///g, "").replace(///;\n///g, "; ")
-	if ///^(!)?\s*\$[a-zA-Z_][a-z_A-Z0-9]*(->[a-zA-Z_][a-z_A-Z0-9]*)+$///.test phpExpression
+	if ///^(!)?\s*\$?[a-zA-Z_][a-z_A-Z0-9]*///.test phpExpression
 		phpExpression = phpExpression.replace ///->([a-zA-Z_][a-z_A-Z0-9]*)///, "['\$1']"
 	
 	# try to fix string concatenation

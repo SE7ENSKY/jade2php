@@ -18,6 +18,7 @@ program
 	.version(require('../package.json').version)
 	.usage('[options] [dir|file ...]')
 	.option('--omit-php-runtime', 'don\'t include php runtime into compiled templates')
+	.option('--omit-php-extractor', 'don\'t include php extractor code into compiled templates')
 	.option('-O, --obj <str>', 'javascript options object')
 	.option('-o, --out <dir>', 'output the compiled html to <dir>')
 	.option('-p, --path <path>', 'filename used to resolve includes')
@@ -59,6 +60,7 @@ if program.obj
 		eval '(' + program.obj + ')'
 
 options.omitPhpRuntime = true if program.omitPhpRuntime
+options.omitPhpExtractor = true if program.omitPhpExtractor
 options.filename = program.path if program.path
 options.watch = program.watch
 files = program.args
