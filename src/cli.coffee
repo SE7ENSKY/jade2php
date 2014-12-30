@@ -29,6 +29,8 @@ program
 	.option('-w, --watch', 'watch files for changes and automatically re-render')
 	.option('--name-after-file', 'Name the template after the last section of the file path (requires --client and overriden by --name)')
 	.option('--doctype <str>', 'Specify the doctype on the command line (useful if it is not specified by the template)')
+	.option('--arrays-only', 'convert $a->b to $a["b"] (default behavior)')
+	.option('--no-arrays-only', 'don\'t convert $a->b to $a["b"]')
 
 
 program.on '--help', ->
@@ -61,6 +63,7 @@ if program.obj
 
 options.omitPhpRuntime = true if program.omitPhpRuntime
 options.omitPhpExtractor = true if program.omitPhpExtractor
+options.arraysOnly = not program.noArraysOnly
 options.filename = program.path if program.path
 options.watch = program.watch
 files = program.args

@@ -3,8 +3,8 @@ chai.should()
 
 jsExpressionToPhp = require '../src/jsExpressionToPhp'
 
-test = (js, referencePhp) ->
-	jsExpressionToPhp(js).should.eql referencePhp
+test = (js, referencePhp, opts = {}) ->
+	jsExpressionToPhp(js, opts).should.eql referencePhp
 
 describe 'jsExpressionToPhp', ->
 
@@ -62,3 +62,8 @@ describe 'jsExpressionToPhp', ->
 	it 'other tests', ->
 		test '"icon-" + icon + ""', "add(\"icon-\", $icon, \"\")"
 
+	it 'support arraysOnly=false option', ->
+		test 'a + a.b + "c" + d.e.f', "add($a, $a->b, \"c\", $d->e->f)",
+			arraysOnly: false
+		test 'a.b(c.d)', '$a->b($c->d)',
+			arraysOnly: false

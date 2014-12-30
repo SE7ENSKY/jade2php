@@ -48,6 +48,7 @@ Compiler = module.exports = Compiler = (node, options) ->
   @pp = options.pretty or false
   @omitPhpRuntime = options.omitPhpRuntime or false
   @omitPhpExtractor = options.omitPhpExtractor or false
+  @arraysOnly = if options.arraysOnly is 'boolean' then options.arraysOnly else true
   @debug = false isnt options.compileDebug
   @indents = 0
   @parentIndents = 0
@@ -64,6 +65,10 @@ Compiler prototype.
 ###
 Compiler:: =
   
+  jsExpressionToPhp: (s) ->
+    jsExpressionToPhp s,
+      arraysOnly: @arraysOnly
+
   ###*
   Compile parse tree to JavaScript.
   
@@ -141,9 +146,9 @@ Compiler:: =
           range = parseJSExpression(rest)
           # code = ((if "!" is match[2] then "" else "jade.escape")) + "((jade_interp = " + range.src + ") == null ? '' : jade_interp)"
           if "!" is match[2]
-          	code = "<?= #{jsExpressionToPhp range.src} ?>"
+          	code = "<?= #{@jsExpressionToPhp range.src} ?>"
           else
-          	code = "<?= htmlspecialchars(#{jsExpressionToPhp range.src}) ?>"
+          	code = "<?= htmlspecialchars(#{@jsExpressionToPhp range.src}) ?>"
           @bufferExpression code
           @buffer rest.substr(range.end + 1), true
           return
@@ -246,7 +251,7 @@ Compiler:: =
   visitCase: (node) ->
     _ = @withinCase
     @withinCase = true
-    @buf.push "<?php switch (#{jsExpressionToPhp node.expr}) : ?>"
+    @buf.push "<?php switch (#{@jsExpressionToPhp node.expr}) : ?>"
     @visit node.block
     @buf.push "<?php endswitch ?>"
     @withinCase = _
@@ -263,7 +268,7 @@ Compiler:: =
     if "default" is node.expr
       @buf.push "<?php default : ?>"
     else
-      @buf.push "<?php case #{jsExpressionToPhp node.expr} : ?>"
+      @buf.push "<?php case #{@jsExpressionToPhp node.expr} : ?>"
     if node.block
       @visit node.block
       @buf.push "<?php break ?>" unless "default" is node.expr
@@ -367,7 +372,7 @@ Compiler:: =
       args = args.split(',')
       rest = args.pop().trim().replace(/^\.\.\./, "")
       args = if args.length > 0 then args.join(',') else undefined
-    phpArgs = if args then jsExpressionToPhp(args).replace(///;$///, '') else undefined
+    phpArgs = if args then @jsExpressionToPhp(args).replace(///;$///, '') else undefined
 
     phpMixinName = mixin.name.replace ///-///, '_'
 
@@ -435,7 +440,7 @@ Compiler:: =
           else
             preMergedAttrs[attr.name] = attr.val
         @buf.push ", array(" + (for key, value of preMergedAttrs
-          """'#{key}' => #{jsExpressionToPhp if key is 'class' then "[#{value}]" else value}"""
+          """'#{key}' => #{@jsExpressionToPhp if key is 'class' then "[#{value}]" else value}"""
         ).join(', ') + ")"
       else
         @buf.push ", null" if phpArgs
@@ -460,7 +465,7 @@ Compiler:: =
       mixinAttrs.push phpArgs if phpArgs
       @buf.push "<?php if (!function_exists('mixin__#{phpMixinName}')) { function mixin__#{phpMixinName}(#{mixinAttrs.join ', '}) { "
       if rest
-        @buf.push "#{jsExpressionToPhp rest} = array_slice(func_get_args(), #{mixinAttrs.length}); "
+        @buf.push "#{@jsExpressionToPhp rest} = array_slice(func_get_args(), #{mixinAttrs.length}); "
       if phpArgs
         @buf.push "global $■;"
         @buf.push ("$■['#{phpArg.replace '$', ''}'] = #{phpArg};" for phpArg in phpArgs.split ', ').join ''
@@ -610,7 +615,7 @@ Compiler:: =
     # Buffer code
     if code.buffer
       val = code.val.trimLeft()
-      val = jsExpressionToPhp val
+      val = @jsExpressionToPhp val
       val = "htmlspecialchars(" + val + ")"  if code.escape
       val = '<?= ' + val + ' ?>'
       @bufferExpression val
@@ -626,7 +631,7 @@ Compiler:: =
     else if LOOP_REGEX.test code.val
       @visitLoop code
     else
-      @buf.push "<?php #{jsExpressionToPhp code.val} ?>"
+      @buf.push "<?php #{@jsExpressionToPhp code.val} ?>"
     
       # Block support
       if code.block
@@ -639,12 +644,12 @@ Compiler:: =
     m = loopNode.val.match LOOP_REGEX
     loopType = m[1]
     conditions = m[2]
-    @buf.push "<?php #{loopType} (#{jsExpressionToPhp conditions}) : ?>"
+    @buf.push "<?php #{loopType} (#{@jsExpressionToPhp conditions}) : ?>"
     @visit loopNode.block if loopNode.block
     @buf.push "<?php end#{loopType} ?>"
 
   visitIf: (ifNode) ->
-    @buf.push "<?php if (#{jsExpressionToPhp ifNode.condition}) : ?>"
+    @buf.push "<?php if (#{@jsExpressionToPhp ifNode.condition}) : ?>"
     @visit ifNode.block if ifNode.block
     unless ifNode.nextElses
       @buf.push "<?php endif ?>"
@@ -656,7 +661,7 @@ Compiler:: =
         else if ELSE_IF_REGEX.test alternative.val
           m = alternative.val.match ELSE_IF_REGEX
           condition = m[1]
-          @buf.push "<?php elseif (#{jsExpressionToPhp condition}) : ?>"
+          @buf.push "<?php elseif (#{@jsExpressionToPhp condition}) : ?>"
           @visit alternative.block
       @buf.push "<?php endif ?>"
   
@@ -668,13 +673,13 @@ Compiler:: =
   ###
   visitEach: (each) ->
     as = if each.key is '$index'
-      jsExpressionToPhp each.val
+      @jsExpressionToPhp each.val
     else
-      "#{jsExpressionToPhp each.key} => #{jsExpressionToPhp each.val}"
+      "#{@jsExpressionToPhp each.key} => #{@jsExpressionToPhp each.val}"
     scopePushPhp = ""
-    scopePushPhp += "$■['#{each.key}'] = #{jsExpressionToPhp each.key};" unless each.key is '$index'
-    scopePushPhp += "$■['#{each.val}'] = #{jsExpressionToPhp each.val};"
-    @buf.push "<?php if (#{jsExpressionToPhp each.obj}) : foreach (#{jsExpressionToPhp each.obj} as #{as}) : #{scopePushPhp} ?>"
+    scopePushPhp += "$■['#{each.key}'] = #{@jsExpressionToPhp each.key};" unless each.key is '$index'
+    scopePushPhp += "$■['#{each.val}'] = #{@jsExpressionToPhp each.val};"
+    @buf.push "<?php if (#{@jsExpressionToPhp each.obj}) : foreach (#{@jsExpressionToPhp each.obj} as #{as}) : #{scopePushPhp} ?>"
     @visit each.block
     unless each.alternative
       @buf.push "<?php endforeach; endif ?>"
@@ -699,9 +704,9 @@ Compiler:: =
       @buffer "<?php attrs(" + (for attributeBlock in attributeBlocks
         if attributeBlock[0] is '{'
           cc = attributeBlock.replace ///jade\.escape///g, 'htmlspecialchars'
-          jsExpressionToPhp cc
+          @jsExpressionToPhp cc
         else
-          jsExpressionToPhp attributeBlock
+          @jsExpressionToPhp attributeBlock
       ).join(", ") + "); ?>"
       # @bufferExpression "jade.attrs(jade.merge([" + attributeBlocks.join(",") + "]), " + utils.stringify(@terse) + ")"
     else @attrs attrs, true  if attrs.length
@@ -732,8 +737,8 @@ Compiler:: =
         if buffer
           # @bufferExpression "jade.attr(\"" + key + "\", " + attr.val + ", " + utils.stringify(escaped) + ", " + utils.stringify(@terse) + ")"
           if ///^[a-zA-Z_][a-z_A-Z0-9]*///.test attr.val
-            # @bufferExpression "<?= ($_ = #{jsExpressionToPhp attr.val}) ? (' #{key}=\"' . #{if escaped then 'htmlspecialchars($_)' else '$_'} . '\"') : '' ?>"
-            @bufferExpression "<?php attr('#{key}', #{jsExpressionToPhp attr.val}, #{if escaped then 'true' else 'false'}) ?>"
+            # @bufferExpression "<?= ($_ = #{@jsExpressionToPhp attr.val}) ? (' #{key}=\"' . #{if escaped then 'htmlspecialchars($_)' else '$_'} . '\"') : '' ?>"
+            @bufferExpression "<?php attr('#{key}', #{@jsExpressionToPhp attr.val}, #{if escaped then 'true' else 'false'}) ?>"
           else
             jsString = attr.val
             jadeString = jsString.replace(///^"///, '').replace(///"$///, '')
@@ -759,20 +764,20 @@ Compiler:: =
         #   phpExpr += 'array(); '
         #   for classExpr in classes
         #     continue if classExpr is 'null' or classExpr is 'false'
-        #     phpClassExpr = jsExpressionToPhp classExpr
+        #     phpClassExpr = @jsExpressionToPhp classExpr
         #     if ///^[a-z_][a-z_A-Z0-9\.]*///.test classExpr
         #       phpExpr += "if (is_array(#{phpClassExpr})) { $_ = array_merge($_, #{phpClassExpr}); } else { array_push($_, #{phpClassExpr}); } "
         #     else
         #       phpExpr += "array_push($_, #{phpClassExpr}); "
         # else
-        #   phpClassExpr = jsExpressionToPhp classes[0]
+        #   phpClassExpr = @jsExpressionToPhp classes[0]
         #   phpExpr += "is_array(#{phpClassExpr}) ? #{phpClassExpr} : array(#{phpClassExpr}); " 
         # phpExpr += '$_ = array_filter($_); if (!empty($_)) echo \' class="\' . join(" ", $_) . \'"\'; ?>'
         # @buffer phpExpr
         attrClassArgs = if classes.length is 1
-          jsExpressionToPhp classes[0]
+          @jsExpressionToPhp classes[0]
         else
-          (jsExpressionToPhp c for c in classes).join ', '
+          (@jsExpressionToPhp c for c in classes).join ', '
         @buffer "<?php attr_class(#{attrClassArgs}) ?>"
     else if classes.length
       if classes.every(isConstant)
