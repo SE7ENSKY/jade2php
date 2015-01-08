@@ -1,6 +1,7 @@
 {
   "name": "jade2php",
   "version": "1.1.4",
+  "main": "main.coffee",
   "dependencies": {
     "commander": "^2.4.0",
     "jade": "^1.7.0",
