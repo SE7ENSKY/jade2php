@@ -48,7 +48,7 @@ Compiler = module.exports = Compiler = (node, options) ->
   @pp = options.pretty or false
   @omitPhpRuntime = options.omitPhpRuntime or false
   @omitPhpExtractor = options.omitPhpExtractor or false
-  @arraysOnly = if options.arraysOnly is 'boolean' then options.arraysOnly else true
+  @arraysOnly = if typeof options.arraysOnly is 'boolean' then options.arraysOnly else true
   @debug = false isnt options.compileDebug
   @indents = 0
   @parentIndents = 0

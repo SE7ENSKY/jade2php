@@ -63,7 +63,7 @@ if program.obj
 
 options.omitPhpRuntime = true if program.omitPhpRuntime
 options.omitPhpExtractor = true if program.omitPhpExtractor
-options.arraysOnly = not program.noArraysOnly
+options.arraysOnly = program.arraysOnly
 options.filename = program.path if program.path
 options.watch = program.watch
 files = program.args
