@@ -6,6 +6,13 @@ Unlock Jade for PHP! Convert Jade templates into raw PHP templates. CLI tool and
 ## Purpose
 Write Jade templates, parse them with original Jade parser (not a PHP port) and convert into equivalent PHP templates.
 
+## Installation
+* to install command line utility: `npm install -g jade2php`
+* for API usage: `npm install --save jade2php`
+
+## Usage
+TBD
+
 ## Features
 Full support for all Jade features is maintained through unit testing, based on Language Reference.
 ```
@@ -140,5 +147,17 @@ JadePhpCompiler
 ## License
 MIT
 
+## Running tests
+PHP must be installed to run tests.
+```bash
+npm intall --dev
+npm test
+```
+
+## Contributing
+Pull requests, sharing experience and ideas are welcomed :)
+
 ## Contributors
 * [Ivan Kravchenko](https://github.com/ivankravchenko) at [SE7ENSKY](https://github.com/SE7ENSKY)
+* [Jan Wirth](https://github.com/FranzSkuffka)
+* [Karol Heczko](https://github.com/KHC)
