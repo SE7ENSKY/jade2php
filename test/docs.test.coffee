@@ -27,6 +27,9 @@ test = (testName, jadeSrc) ->
 
 describe 'Jade Language Reference', ->
 
+	it "PHP CLI utility must be installed", ->
+		runPhp("<?php echo 'installed';").should.eql "installed"
+
 	describe 'Plain Text', ->
 		test 'Piped Text', """
 			| Plain text can include <strong>html</strong>
