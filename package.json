@@ -1,7 +1,31 @@
 {
   "name": "jade2php",
-  "version": "1.1.5",
-  "main": "main.coffee",
+  "description": "Unlock Jade for PHP! Convert Jade templates into raw PHP templates. CLI tool and JavaScript API. Test covered.",
+  "version": "1.1.6",
+  "license": "MIT",
+  "author": "Ivan Kravchenko",
+  "keywords": [
+    "jade",
+    "php",
+    "jade to php",
+    "jade2php",
+    "transpiler",
+    "converter"
+  ],
+  "homepage": "https://github.com/SE7ENSKY/jade2php",
+  "bugs": "https://github.com/SE7ENSKY/jade2php/issues",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/SE7ENSKY/jade2php.git"
+  },
+
+  "directories": {
+    "lib": "./lib"
+  },
+  "main": "./lib/jade2php",
+  "bin": {
+    "jade2php": "./bin/jade2php"
+  },
   "dependencies": {
     "commander": "^2.4.0",
     "jade": "^1.7.0",
@@ -16,9 +40,7 @@
     "mocha": "*"
   },
   "scripts": {
-    "test": "./node_modules/.bin/mocha --compilers coffee:coffee-script/register"
-  },
-  "bin": {
-    "jade2php": "./bin/jade2php"
+    "test": "./node_modules/.bin/mocha --compilers coffee:coffee-script/register",
+    "prepublish": "coffee -o lib -c src/*.coffee"
   }
 }
