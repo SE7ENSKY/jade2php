@@ -1,7 +1,7 @@
 {
   "name": "jade2php",
   "description": "Unlock Jade for PHP! Convert Jade templates into raw PHP templates. CLI tool and JavaScript API. Test covered.",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "license": "MIT",
   "author": "Ivan Kravchenko",
   "keywords": [
@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "commander": "^2.4.0",
-    "jade": "^1.7.0",
+    "jade": "1.7.0",
     "js2php": "0.0.14",
     "mkdirp": "^0.5.0",
     "monocle": "^1.1.51"
