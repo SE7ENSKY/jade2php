@@ -67,3 +67,6 @@ describe 'jsExpressionToPhp', ->
 			arraysOnly: false
 		test 'a.b(c.d)', '$a->b($c->d)',
 			arraysOnly: false
+
+	it 'should not get confused by "+" sings inside strings', ->
+		test "'' + '+420'", "add('', '+420')"
