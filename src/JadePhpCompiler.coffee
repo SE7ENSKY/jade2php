@@ -462,7 +462,9 @@ Compiler:: =
       # @parentIndents--
       # @buf.push "};"
       mixinAttrs = ['$block = null', '$attributes = null']
-      mixinAttrs.push phpArgs if phpArgs
+      if phpArgs
+        for phpArg in phpArgs.split ', '
+          mixinAttrs.push "#{phpArg} = null"
       @buf.push "<?php if (!function_exists('mixin__#{phpMixinName}')) { function mixin__#{phpMixinName}(#{mixinAttrs.join ', '}) { "
       if rest
         @buf.push "#{@jsExpressionToPhp rest} = array_slice(func_get_args(), #{mixinAttrs.length}); "
