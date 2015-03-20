@@ -317,3 +317,14 @@ describe 'Jade Language Reference', ->
 
 			+list('my-list', 1, 2, 3, 4)
 		"""
+
+	describe "mixin with null params", ->
+		test "should render same", """
+			mixin user(name)
+				.user(data-name=name)= name
+
+			+user("one")
+			+user
+			+user("two")
+			+user(null)
+		"""
