@@ -334,3 +334,18 @@ describe 'JadePhpCompiler', ->
 				pretty: yes
 				omitPhpRuntime: yes
 				omitPhpExtractor: yes
+
+	describe "raw tag inserting", ->
+		it "should work :)", ->
+			c """
+				doctype html
+				html
+					head
+						title test
+					<body !{bodyAttributes}>
+					header
+					main
+						article
+					footer
+					</body>
+			""", '<!DOCTYPE html><html><head><title>test</title></head><body <?= $bodyAttributes ?>><header></header><main><article></article></main><footer></footer></body></html>'
