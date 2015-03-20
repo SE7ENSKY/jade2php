@@ -5,10 +5,11 @@ jade = require 'jade'
 jade2php = require '../src/jade2php'
 
 describe 'JadePhpCompiler', ->
-	c = (jadeSrc, referenceCode) ->
-		compiledPhp = jade2php jadeSrc,
+	c = (jadeSrc, referenceCode, opts = null) ->
+		opts or= 
 			omitPhpRuntime: yes
 			omitPhpExtractor: yes
+		compiledPhp = jade2php jadeSrc, opts
 		compiledPhp.should.eql referenceCode
 
 	describe 'rendering simple jade syntax into vanilla html', ->
@@ -324,3 +325,12 @@ describe 'JadePhpCompiler', ->
 			c """
 				+e("li").item.col-sm-4(class="delivery-steps__item_\#{deliveryProcessItem.class}")
 			""", "<?php mixin__e(null, array('class' => array('item', 'col-sm-4', add(\"delivery-steps__item_\", $deliveryProcessItem['class'], \"\"))), \"li\") ?>"
+
+	describe "pretty option", ->
+		it "should be ignored", ->
+			c """
+				doctype html
+			""", "<!DOCTYPE html>",
+				pretty: yes
+				omitPhpRuntime: yes
+				omitPhpExtractor: yes

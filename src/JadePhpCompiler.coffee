@@ -45,7 +45,8 @@ Compiler = module.exports = Compiler = (node, options) ->
   @node = node
   @hasCompiledDoctype = false
   @hasCompiledTag = false
-  @pp = options.pretty or false
+  # @pp = options.pretty or false
+  @pp = false # pretty option isn't supported yet
   @omitPhpRuntime = options.omitPhpRuntime or false
   @omitPhpExtractor = options.omitPhpExtractor or false
   @arraysOnly = if typeof options.arraysOnly is 'boolean' then options.arraysOnly else true
