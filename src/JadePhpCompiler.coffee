@@ -184,8 +184,8 @@ Compiler:: =
       @lastBufferedType = "code"
       # @lastBuffered += " + (" + src + ")"
       @lastBuffered += src
-      @buf[@lastBufferedIdx - 1] = "buf.push(" + @bufferStartChar + @lastBuffered + ");"
-      # @buf[@lastBufferedIdx - 1] = @bufferStartChar + @lastBuffered
+      # @buf[@lastBufferedIdx - 1] = "buf.push(" + @bufferStartChar + @lastBuffered + ");"
+      @buf[@lastBufferedIdx - 1] = @bufferStartChar + @lastBuffered
     else
       # @buf.push "buf.push(" + src + ");"
       @buf.push src

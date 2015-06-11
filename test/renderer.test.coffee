@@ -349,3 +349,12 @@ describe 'JadePhpCompiler', ->
 					footer
 					</body>
 			""", '<!DOCTYPE html><html><head><title>test</title></head><body <?= $bodyAttributes ?>><header></header><main><article></article></main><footer></footer></body></html>'
+
+	describe "issues from GitHub", ->
+		it "#21 'buf.push(...)' appears on the output", ->
+			c """
+				div foo
+				!= data
+				if myvar
+					div bar
+			""", '<div>foo</div><?= $data ?><?php if ($myvar) : ?><div>bar</div><?php endif ?>'
