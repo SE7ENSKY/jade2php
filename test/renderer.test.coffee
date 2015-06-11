@@ -239,7 +239,7 @@ describe 'JadePhpCompiler', ->
 
 				+user()
 				+user()
-			""", "<?php if (!function_exists('mixin__user')) { function mixin__user($block = null, $attributes = null) { ?><div class=\"user\"></div><?php } } ?><?php mixin__user() ?><?php mixin__user() ?>"
+			""", "<?php if (!function_exists('mixin__user')) { function mixin__user($block = null, $attributes = array()) { ?><div class=\"user\"></div><?php } } ?><?php mixin__user() ?><?php mixin__user() ?>"
 		it 'with args', ->
 			c """
 				mixin user(name)
@@ -248,7 +248,7 @@ describe 'JadePhpCompiler', ->
 				+user("Node")
 				+user("JS")
 				+user("PHP")
-			""", "<?php if (!function_exists('mixin__user')) { function mixin__user($block = null, $attributes = null, $name = null) { global $■;$■['name'] = $name;?><div class=\"user\"><?= htmlspecialchars($name) ?></div><?php } } ?><?php mixin__user(null, null, \"Node\") ?><?php mixin__user(null, null, \"JS\") ?><?php mixin__user(null, null, \"PHP\") ?>"
+			""", "<?php if (!function_exists('mixin__user')) { function mixin__user($block = null, $attributes = array(), $name = null) { global $■;$■['name'] = $name;?><div class=\"user\"><?= htmlspecialchars($name) ?></div><?php } } ?><?php mixin__user(null, array(), \"Node\") ?><?php mixin__user(null, array(), \"JS\") ?><?php mixin__user(null, array(), \"PHP\") ?>"
 		it 'name with dashes', ->
 			c """
 				mixin user-name(firstName, lastName)
@@ -256,7 +256,7 @@ describe 'JadePhpCompiler', ->
 
 				+user-name("Node", "JS")
 				+user-name("Jade", "PHP")
-			""", "<?php if (!function_exists('mixin__user_name')) { function mixin__user_name($block = null, $attributes = null, $firstName = null, $lastName = null) { global $■;$■['firstName'] = $firstName;$■['lastName'] = $lastName;?><span class=\"user-name\"><?= $firstName ?> <?= $lastName ?></span><?php } } ?><?php mixin__user_name(null, null, \"Node\", \"JS\") ?><?php mixin__user_name(null, null, \"Jade\", \"PHP\") ?>"
+			""", "<?php if (!function_exists('mixin__user_name')) { function mixin__user_name($block = null, $attributes = array(), $firstName = null, $lastName = null) { global $■;$■['firstName'] = $firstName;$■['lastName'] = $lastName;?><span class=\"user-name\"><?= $firstName ?> <?= $lastName ?></span><?php } } ?><?php mixin__user_name(null, array(), \"Node\", \"JS\") ?><?php mixin__user_name(null, array(), \"Jade\", \"PHP\") ?>"
 
 		it 'support mixin blocks', ->
 			c """
@@ -274,7 +274,7 @@ describe 'JadePhpCompiler', ->
 				+article('Hello world')
 					p This is my
 					p Amazing article
-			""", "<?php if (!function_exists('mixin__article')) { function mixin__article($block = null, $attributes = null, $title = null) { global $■;$■['title'] = $title;?><div class=\"article\"><div class=\"article-wrapper\"><h1><?= htmlspecialchars($title) ?></h1><?php if ($block) : ?><?php if (is_callable($block)) $block(); ?><?php else : ?><p>No content provided</p><?php endif ?></div></div><?php } } ?><?php mixin__article(null, null, 'Hello world') ?><?php mixin__article(function(){ ?><p>This is my</p><p>Amazing article</p><?php }, null, 'Hello world') ?>"
+			""", "<?php if (!function_exists('mixin__article')) { function mixin__article($block = null, $attributes = array(), $title = null) { global $■;$■['title'] = $title;?><div class=\"article\"><div class=\"article-wrapper\"><h1><?= htmlspecialchars($title) ?></h1><?php if ($block) : ?><?php if (is_callable($block)) $block(); ?><?php else : ?><p>No content provided</p><?php endif ?></div></div><?php } } ?><?php mixin__article(null, array(), 'Hello world') ?><?php mixin__article(function(){ ?><p>This is my</p><p>Amazing article</p><?php }, array(), 'Hello world') ?>"
 
 		it 'support call mixin inside mixin with blocks', ->
 			c """
@@ -296,7 +296,7 @@ describe 'JadePhpCompiler', ->
 				+article('Hello world')
 					p This is my
 					p Amazing article
-			""", "<?php if (!function_exists('mixin__content')) { function mixin__content($block = null, $attributes = null) { ?><?php if ($block) : ?><?php if (is_callable($block)) $block(); ?><?php else : ?><p>No content provided</p><?php endif ?><?php } } ?><?php if (!function_exists('mixin__article')) { function mixin__article($block = null, $attributes = null, $title = null) { global $■;$■['title'] = $title;?><div class=\"article\"><div class=\"article-wrapper\"><h1><?= htmlspecialchars($title) ?></h1><?php mixin__content(function() use ($block) { ?><?php if (is_callable($block)) $block(); ?><?php }) ?></div></div><?php } } ?><?php mixin__article(null, null, 'Hello world') ?><?php mixin__article(function(){ ?><p>This is my</p><p>Amazing article</p><?php }, null, 'Hello world') ?>"
+			""", "<?php if (!function_exists('mixin__content')) { function mixin__content($block = null, $attributes = array()) { ?><?php if ($block) : ?><?php if (is_callable($block)) $block(); ?><?php else : ?><p>No content provided</p><?php endif ?><?php } } ?><?php if (!function_exists('mixin__article')) { function mixin__article($block = null, $attributes = array(), $title = null) { global $■;$■['title'] = $title;?><div class=\"article\"><div class=\"article-wrapper\"><h1><?= htmlspecialchars($title) ?></h1><?php mixin__content(function() use ($block) { ?><?php if (is_callable($block)) $block(); ?><?php }) ?></div></div><?php } } ?><?php mixin__article(null, array(), 'Hello world') ?><?php mixin__article(function(){ ?><p>This is my</p><p>Amazing article</p><?php }, array(), 'Hello world') ?>"
 
 		it 'support rest params', ->
 			c """
@@ -309,7 +309,7 @@ describe 'JadePhpCompiler', ->
 				+sum(1, 2)
 				+sum(5, 5, 12)
 				+sum(5, 5, 12, 1)
-			""", "<?php if (!function_exists('mixin__sum')) { function mixin__sum($block = null, $attributes = null, $a = null, $b = null) { $other = array_slice(func_get_args(), 4); global $■;$■['a'] = $a;$■['b'] = $b;?><?php $result = add($a, $b) ?><?php if ($other) : foreach ($other as $number) : $■['number'] = $number; ?><?php $result += $number ?><?php endforeach; endif ?><div class=\"sum\"><?= htmlspecialchars($result) ?></div><?php } } ?><?php mixin__sum(null, null, 1, 2) ?><?php mixin__sum(null, null, 5, 5, 12) ?><?php mixin__sum(null, null, 5, 5, 12, 1) ?>"
+			""", "<?php if (!function_exists('mixin__sum')) { function mixin__sum($block = null, $attributes = array(), $a = null, $b = null) { $other = array_slice(func_get_args(), 4); global $■;$■['a'] = $a;$■['b'] = $b;?><?php $result = add($a, $b) ?><?php if ($other) : foreach ($other as $number) : $■['number'] = $number; ?><?php $result += $number ?><?php endforeach; endif ?><div class=\"sum\"><?= htmlspecialchars($result) ?></div><?php } } ?><?php mixin__sum(null, array(), 1, 2) ?><?php mixin__sum(null, array(), 5, 5, 12) ?><?php mixin__sum(null, array(), 5, 5, 12, 1) ?>"
 
 			c """
 				mixin list(id, ...items)
@@ -318,7 +318,7 @@ describe 'JadePhpCompiler', ->
 							li= item
 
 				+list('my-list', 1, 2, 3, 4)
-			""", "<?php if (!function_exists('mixin__list')) { function mixin__list($block = null, $attributes = null, $id = null) { $items = array_slice(func_get_args(), 3); global $■;$■['id'] = $id;?><ul<?php attr('id', $id, true) ?>><?php if ($items) : foreach ($items as $item) : $■['item'] = $item; ?><li><?= htmlspecialchars($item) ?></li><?php endforeach; endif ?></ul><?php } } ?><?php mixin__list(null, null, 'my-list', 1, 2, 3, 4) ?>"
+			""", "<?php if (!function_exists('mixin__list')) { function mixin__list($block = null, $attributes = array(), $id = null) { $items = array_slice(func_get_args(), 3); global $■;$■['id'] = $id;?><ul<?php attr('id', $id, true) ?>><?php if ($items) : foreach ($items as $item) : $■['item'] = $item; ?><li><?= htmlspecialchars($item) ?></li><?php endforeach; endif ?></ul><?php } } ?><?php mixin__list(null, array(), 'my-list', 1, 2, 3, 4) ?>"
 
 	describe "other mixed tests", ->
 		it 'mixin + class attrs + interpolation', ->

@@ -444,7 +444,7 @@ Compiler:: =
           """'#{key}' => #{@jsExpressionToPhp if key is 'class' then "[#{value}]" else value}"""
         ).join(', ') + ")"
       else
-        @buf.push ", null" if phpArgs
+        @buf.push ", array()" if phpArgs
 
       @buf.push ", #{phpArgs}" if phpArgs
       @buf.push ") ?>"
@@ -462,7 +462,7 @@ Compiler:: =
       # @visit block
       # @parentIndents--
       # @buf.push "};"
-      mixinAttrs = ['$block = null', '$attributes = null']
+      mixinAttrs = ['$block = null', '$attributes = array()']
       if phpArgs
         for phpArg in phpArgs.split ', '
           mixinAttrs.push "#{phpArg} = null"
