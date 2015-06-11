@@ -1,7 +1,7 @@
 {
   "name": "jade2php",
   "description": "Unlock Jade for PHP! Convert Jade templates into raw PHP templates. CLI tool and JavaScript API. Test covered.",
-  "version": "1.1.9",
+  "version": "1.2.0",
   "license": "MIT",
   "author": "Ivan Kravchenko",
   "keywords": [
@@ -18,7 +18,6 @@
     "type": "git",
     "url": "git://github.com/SE7ENSKY/jade2php.git"
   },
-
   "directories": {
     "lib": "./lib"
   },
@@ -36,8 +35,8 @@
   "devDependencies": {
     "chai": "*",
     "coffee-script": "*",
-    "exec-sync": "^0.1.6",
-    "mocha": "*"
+    "mocha": "*",
+    "sync-exec": "^0.5.0"
   },
   "scripts": {
     "test": "./node_modules/.bin/mocha --compilers coffee:coffee-script/register",

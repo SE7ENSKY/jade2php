@@ -3,14 +3,14 @@ chai.should()
 
 jade = require 'jade'
 jade2php = require '../src/jade2php'
-execSync = require 'exec-sync'
+exec = require 'sync-exec'
 fs = require 'fs'
 
 runPhp = (phpCode) ->
 	tmpFilename = '__input.php'
 	fs.writeFileSync tmpFilename, phpCode, 'utf-8'
 	try
-		output = execSync "php #{tmpFilename}"
+		output = exec("php #{tmpFilename}").stdout
 	catch e
 		console.error e
 		console.error "Bad PHP code\n#{phpCode}"
