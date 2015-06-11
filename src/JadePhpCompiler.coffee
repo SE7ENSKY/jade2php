@@ -349,7 +349,11 @@ Compiler:: =
   ###
   visitDoctype: (doctype) ->
     @setDoctype doctype.val or "default"  if doctype and (doctype.val or not @doctype)
-    @buffer @doctype  if @doctype
+    if @doctype
+      if ///<\?///.test @doctype
+        @buf.push "<?= \'#{@doctype.replace "'", "\'"}\' ?>"
+      else
+        @buffer @doctype
     @hasCompiledDoctype = true
     return
 
