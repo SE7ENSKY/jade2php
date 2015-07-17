@@ -29,9 +29,9 @@ filters = require("jade/lib/filters")
 doctypes = require("jade/lib/doctypes")
 runtime = require("jade/lib/runtime")
 utils = require("jade/lib/utils")
-selfClosing = require("jade/node_modules/void-elements")
-parseJSExpression = require("jade/node_modules/character-parser").parseMax
-constantinople = require("jade/node_modules/constantinople")
+selfClosing = require("void-elements")
+parseJSExpression = require("character-parser").parseMax
+constantinople = require("constantinople")
 
 ###*
 Initialize `Compiler` with the given `node`.
