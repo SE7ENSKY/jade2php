@@ -379,7 +379,7 @@ Compiler:: =
       args = if args.length > 0 then args.join(',') else undefined
     phpArgs = if args then @jsExpressionToPhp(args).replace(///;$///, '') else undefined
 
-    phpMixinName = mixin.name.replace ///-///, '_'
+    phpMixinName = mixin.name.replace ///-///g, '_'
 
     pp = @pp
     dynamic = mixin.name[0] is "#"
