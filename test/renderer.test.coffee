@@ -28,7 +28,7 @@ describe 'JadePhpCompiler', ->
 		
 		it 'should support doctypes', ->
 			c "doctype html", "<!DOCTYPE html>"
-			c "doctype xml", '<?= \'<?xml version="1.0" encoding="utf-8" ?>\' ?>'
+			c "doctype xml", '<?php echo \'<?xml version="1.0" encoding="utf-8" ?>\' ?>'
 			c "doctype strict", '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">'
 		
 		it 'should support tags with text', ->
@@ -56,10 +56,10 @@ describe 'JadePhpCompiler', ->
 	describe 'rendering simple expressions', ->
 
 		it 'should support simple output', ->
-			c '= value', '<?= htmlspecialchars($value) ?>'
+			c '= value', '<?php echo htmlspecialchars($value) ?>'
 
 		it 'should support simple unescaped output', ->
-			c '!= value', '<?= $value ?>'
+			c '!= value', '<?php echo $value ?>'
 
 		it 'should support attr values', ->
 			c 'div(data-value=someValue)', "<div<?php attr('data-value', $someValue, true) ?>></div>"
@@ -68,40 +68,40 @@ describe 'JadePhpCompiler', ->
 			c 'div(data-value!=someValue)', "<div<?php attr('data-value', $someValue, false) ?>></div>"
 		
 		it 'should support tag text', ->
-			c 'div= someText', '<div><?= htmlspecialchars($someText) ?></div>'
+			c 'div= someText', '<div><?php echo htmlspecialchars($someText) ?></div>'
 
 		it 'should support tag unescaped text', ->
-			c 'div!= someText', '<div><?= $someText ?></div>'
+			c 'div!= someText', '<div><?php echo $someText ?></div>'
 
 		it 'should support several attrs and text', ->
-			c 'a(href=url, title=title)= title', "<a<?php attr('href', $url, true) ?><?php attr('title', $title, true) ?>><?= htmlspecialchars($title) ?></a>"
+			c 'a(href=url, title=title)= title', "<a<?php attr('href', $url, true) ?><?php attr('title', $title, true) ?>><?php echo htmlspecialchars($title) ?></a>"
 
 	describe 'string interpolation', ->
 
 		it 'should support simple string output', ->
-			c '= "Hello world!"', '<?= htmlspecialchars("Hello world!") ?>'
-			c "= 'Hello world!'", "<?= htmlspecialchars('Hello world!') ?>"
-			c 'div= "Hello world!"', '<div><?= htmlspecialchars("Hello world!") ?></div>'
-			c "div= 'Hello world!'", "<div><?= htmlspecialchars('Hello world!') ?></div>"
-		
+			c '= "Hello world!"', '<?php echo htmlspecialchars("Hello world!") ?>'
+			c "= 'Hello world!'", "<?php echo htmlspecialchars('Hello world!') ?>"
+			c 'div= "Hello world!"', '<div><?php echo htmlspecialchars("Hello world!") ?></div>'
+			c "div= 'Hello world!'", "<div><?php echo htmlspecialchars('Hello world!') ?></div>"
+
 		it 'should support simple unsecaped string output', ->
-			c '!= "Hello world!"', '<?= "Hello world!" ?>'
-			c "!= 'Hello world!'", "<?= 'Hello world!' ?>"
-			c 'div!= "Hello world!"', '<div><?= "Hello world!" ?></div>'
-			c "div!= 'Hello world!'", "<div><?= 'Hello world!' ?></div>"
+			c '!= "Hello world!"', '<?php echo "Hello world!" ?>'
+			c "!= 'Hello world!'", "<?php echo 'Hello world!' ?>"
+			c 'div!= "Hello world!"', '<div><?php echo "Hello world!" ?></div>'
+			c "div!= 'Hello world!'", "<div><?php echo 'Hello world!' ?></div>"
 
 		it 'should support simple interpolation with variable', ->
-			c '.greeting Hello, \#{name}!', '<div class="greeting">Hello, <?= htmlspecialchars($name) ?>!</div>'
-			c '.greeting Hello, !{name}!', '<div class="greeting">Hello, <?= $name ?>!</div>'
-			c '.greeting Hello, #{firstName} #{lastName}!', '<div class=\"greeting\">Hello, <?= htmlspecialchars($firstName) ?> <?= htmlspecialchars($lastName) ?>!</div>'
+			c '.greeting Hello, \#{name}!', '<div class="greeting">Hello, <?php echo htmlspecialchars($name) ?>!</div>'
+			c '.greeting Hello, !{name}!', '<div class="greeting">Hello, <?php echo $name ?>!</div>'
+			c '.greeting Hello, #{firstName} #{lastName}!', '<div class=\"greeting\">Hello, <?php echo htmlspecialchars($firstName) ?> <?php echo htmlspecialchars($lastName) ?>!</div>'
 
 		it 'should support simple attr interpolation with variable', ->
-			c 'article(id="post-#{id}")', '<article id="post-<?= htmlspecialchars($id) ?>"></article>'
-			c 'article(id="post-#{type}-#{id}")', '<article id="post-<?= htmlspecialchars($type) ?>-<?= htmlspecialchars($id) ?>"></article>'
-			c 'article(id="post-#{type}-#{id}") Post \##{id} of type \'#{type}\'', '<article id="post-<?= htmlspecialchars($type) ?>-<?= htmlspecialchars($id) ?>">Post #<?= htmlspecialchars($id) ?> of type \'<?= htmlspecialchars($type) ?>\'</article>'
-			
+			c 'article(id="post-#{id}")', '<article id="post-<?php echo htmlspecialchars($id) ?>"></article>'
+			c 'article(id="post-#{type}-#{id}")', '<article id="post-<?php echo htmlspecialchars($type) ?>-<?php echo htmlspecialchars($id) ?>"></article>'
+			c 'article(id="post-#{type}-#{id}") Post \##{id} of type \'#{type}\'', '<article id="post-<?php echo htmlspecialchars($type) ?>-<?php echo htmlspecialchars($id) ?>">Post #<?php echo htmlspecialchars($id) ?> of type \'<?php echo htmlspecialchars($type) ?>\'</article>'
+
 			# jade not support this :(
-			# c 'article(id="post-!{idNumber}")', '<article id="post-<?= $idNumber ?>"></article>'
+			# c 'article(id="post-!{idNumber}")', '<article id="post-<?php echo $idNumber ?>"></article>'
 
 	describe 'control statements', ->
 		describe 'condition', ->
@@ -190,32 +190,32 @@ describe 'JadePhpCompiler', ->
 				c """
 					each user in users
 						.user= user
-				""", '<?php if ($users) : foreach ($users as $user) : $■[\'user\'] = $user; ?><div class="user"><?= htmlspecialchars($user) ?></div><?php endforeach; endif ?>'
+				""", '<?php if ($users) : foreach ($users as $user) : $■[\'user\'] = $user; ?><div class="user"><?php echo htmlspecialchars($user) ?></div><?php endforeach; endif ?>'
 			it 'simple with indexing', ->
 				c """
 					each value, key in options
 						.option \#{key}: \#{value}
-				""", '<?php if ($options) : foreach ($options as $key => $value) : $■[\'key\'] = $key;$■[\'value\'] = $value; ?><div class="option"><?= htmlspecialchars($key) ?>: <?= htmlspecialchars($value) ?></div><?php endforeach; endif ?>'
+				""", '<?php if ($options) : foreach ($options as $key => $value) : $■[\'key\'] = $key;$■[\'value\'] = $value; ?><div class="option"><?php echo htmlspecialchars($key) ?>: <?php echo htmlspecialchars($value) ?></div><?php endforeach; endif ?>'
 			it 'alternative', ->
 				c """
 					each user in users
 						.user= user
 					else
 						.error No users found
-				""", '<?php if ($users) : foreach ($users as $user) : $■[\'user\'] = $user; ?><div class="user"><?= htmlspecialchars($user) ?></div><?php endforeach; else : ?><div class="error">No users found</div><?php endif ?>'
+				""", '<?php if ($users) : foreach ($users as $user) : $■[\'user\'] = $user; ?><div class="user"><?php echo htmlspecialchars($user) ?></div><?php endforeach; else : ?><div class="error">No users found</div><?php endif ?>'
 
 	describe 'code node', ->
 		it 'simple', ->
 			c """
 				- var name = "NodeJS"
 				h1 Hello, \#{name}!
-			""", '<?php $name = "NodeJS" ?><h1>Hello, <?= htmlspecialchars($name) ?>!</h1>'
-			
+			""", '<?php $name = "NodeJS" ?><h1>Hello, <?php echo htmlspecialchars($name) ?>!</h1>'
+
 			c """
 				- var firstName = "Node"
 				- var lastName = "JS"
 				h1 Hello, \#{firstName} \#{lastName}!
-			""", '<?php $firstName = "Node" ?><?php $lastName = "JS" ?><h1>Hello, <?= htmlspecialchars($firstName) ?> <?= htmlspecialchars($lastName) ?>!</h1>'
+			""", '<?php $firstName = "Node" ?><?php $lastName = "JS" ?><h1>Hello, <?php echo htmlspecialchars($firstName) ?> <?php echo htmlspecialchars($lastName) ?>!</h1>'
 
 	describe 'class attribute', ->
 		it 'simple', ->
@@ -248,7 +248,7 @@ describe 'JadePhpCompiler', ->
 				+user("Node")
 				+user("JS")
 				+user("PHP")
-			""", "<?php if (!function_exists('mixin__user')) { function mixin__user($block = null, $attributes = array(), $name = null) { global $■;$■['name'] = $name;?><div class=\"user\"><?= htmlspecialchars($name) ?></div><?php } } ?><?php mixin__user(null, array(), \"Node\") ?><?php mixin__user(null, array(), \"JS\") ?><?php mixin__user(null, array(), \"PHP\") ?>"
+			""", "<?php if (!function_exists('mixin__user')) { function mixin__user($block = null, $attributes = array(), $name = null) { global $■;$■['name'] = $name;?><div class=\"user\"><?php echo htmlspecialchars($name) ?></div><?php } } ?><?php mixin__user(null, array(), \"Node\") ?><?php mixin__user(null, array(), \"JS\") ?><?php mixin__user(null, array(), \"PHP\") ?>"
 		it 'name with dashes', ->
 			c """
 				mixin user-name(firstName, lastName)
@@ -256,7 +256,7 @@ describe 'JadePhpCompiler', ->
 
 				+user-name("Node", "JS")
 				+user-name("Jade", "PHP")
-			""", "<?php if (!function_exists('mixin__user_name')) { function mixin__user_name($block = null, $attributes = array(), $firstName = null, $lastName = null) { global $■;$■['firstName'] = $firstName;$■['lastName'] = $lastName;?><span class=\"user-name\"><?= $firstName ?> <?= $lastName ?></span><?php } } ?><?php mixin__user_name(null, array(), \"Node\", \"JS\") ?><?php mixin__user_name(null, array(), \"Jade\", \"PHP\") ?>"
+			""", "<?php if (!function_exists('mixin__user_name')) { function mixin__user_name($block = null, $attributes = array(), $firstName = null, $lastName = null) { global $■;$■['firstName'] = $firstName;$■['lastName'] = $lastName;?><span class=\"user-name\"><?php echo $firstName ?> <?php echo $lastName ?></span><?php } } ?><?php mixin__user_name(null, array(), \"Node\", \"JS\") ?><?php mixin__user_name(null, array(), \"Jade\", \"PHP\") ?>"
 
 		it 'support mixin blocks', ->
 			c """
@@ -274,7 +274,7 @@ describe 'JadePhpCompiler', ->
 				+article('Hello world')
 					p This is my
 					p Amazing article
-			""", "<?php if (!function_exists('mixin__article')) { function mixin__article($block = null, $attributes = array(), $title = null) { global $■;$■['title'] = $title;?><div class=\"article\"><div class=\"article-wrapper\"><h1><?= htmlspecialchars($title) ?></h1><?php if ($block) : ?><?php if (is_callable($block)) $block(); ?><?php else : ?><p>No content provided</p><?php endif ?></div></div><?php } } ?><?php mixin__article(null, array(), 'Hello world') ?><?php mixin__article(function(){ ?><p>This is my</p><p>Amazing article</p><?php }, array(), 'Hello world') ?>"
+			""", "<?php if (!function_exists('mixin__article')) { function mixin__article($block = null, $attributes = array(), $title = null) { global $■;$■['title'] = $title;?><div class=\"article\"><div class=\"article-wrapper\"><h1><?php echo htmlspecialchars($title) ?></h1><?php if ($block) : ?><?php if (is_callable($block)) $block(); ?><?php else : ?><p>No content provided</p><?php endif ?></div></div><?php } } ?><?php mixin__article(null, array(), 'Hello world') ?><?php mixin__article(function(){ ?><p>This is my</p><p>Amazing article</p><?php }, array(), 'Hello world') ?>"
 
 		it 'support call mixin inside mixin with blocks', ->
 			c """
@@ -296,7 +296,7 @@ describe 'JadePhpCompiler', ->
 				+article('Hello world')
 					p This is my
 					p Amazing article
-			""", "<?php if (!function_exists('mixin__content')) { function mixin__content($block = null, $attributes = array()) { ?><?php if ($block) : ?><?php if (is_callable($block)) $block(); ?><?php else : ?><p>No content provided</p><?php endif ?><?php } } ?><?php if (!function_exists('mixin__article')) { function mixin__article($block = null, $attributes = array(), $title = null) { global $■;$■['title'] = $title;?><div class=\"article\"><div class=\"article-wrapper\"><h1><?= htmlspecialchars($title) ?></h1><?php mixin__content(function() use ($block) { ?><?php if (is_callable($block)) $block(); ?><?php }) ?></div></div><?php } } ?><?php mixin__article(null, array(), 'Hello world') ?><?php mixin__article(function(){ ?><p>This is my</p><p>Amazing article</p><?php }, array(), 'Hello world') ?>"
+			""", "<?php if (!function_exists('mixin__content')) { function mixin__content($block = null, $attributes = array()) { ?><?php if ($block) : ?><?php if (is_callable($block)) $block(); ?><?php else : ?><p>No content provided</p><?php endif ?><?php } } ?><?php if (!function_exists('mixin__article')) { function mixin__article($block = null, $attributes = array(), $title = null) { global $■;$■['title'] = $title;?><div class=\"article\"><div class=\"article-wrapper\"><h1><?php echo htmlspecialchars($title) ?></h1><?php mixin__content(function() use ($block) { ?><?php if (is_callable($block)) $block(); ?><?php }) ?></div></div><?php } } ?><?php mixin__article(null, array(), 'Hello world') ?><?php mixin__article(function(){ ?><p>This is my</p><p>Amazing article</p><?php }, array(), 'Hello world') ?>"
 
 		it 'support rest params', ->
 			c """
@@ -309,7 +309,7 @@ describe 'JadePhpCompiler', ->
 				+sum(1, 2)
 				+sum(5, 5, 12)
 				+sum(5, 5, 12, 1)
-			""", "<?php if (!function_exists('mixin__sum')) { function mixin__sum($block = null, $attributes = array(), $a = null, $b = null) { $other = array_slice(func_get_args(), 4); global $■;$■['a'] = $a;$■['b'] = $b;?><?php $result = add($a, $b) ?><?php if ($other) : foreach ($other as $number) : $■['number'] = $number; ?><?php $result += $number ?><?php endforeach; endif ?><div class=\"sum\"><?= htmlspecialchars($result) ?></div><?php } } ?><?php mixin__sum(null, array(), 1, 2) ?><?php mixin__sum(null, array(), 5, 5, 12) ?><?php mixin__sum(null, array(), 5, 5, 12, 1) ?>"
+			""", "<?php if (!function_exists('mixin__sum')) { function mixin__sum($block = null, $attributes = array(), $a = null, $b = null) { $other = array_slice(func_get_args(), 4); global $■;$■['a'] = $a;$■['b'] = $b;?><?php $result = add($a, $b) ?><?php if ($other) : foreach ($other as $number) : $■['number'] = $number; ?><?php $result += $number ?><?php endforeach; endif ?><div class=\"sum\"><?php echo htmlspecialchars($result) ?></div><?php } } ?><?php mixin__sum(null, array(), 1, 2) ?><?php mixin__sum(null, array(), 5, 5, 12) ?><?php mixin__sum(null, array(), 5, 5, 12, 1) ?>"
 
 			c """
 				mixin list(id, ...items)
@@ -318,7 +318,7 @@ describe 'JadePhpCompiler', ->
 							li= item
 
 				+list('my-list', 1, 2, 3, 4)
-			""", "<?php if (!function_exists('mixin__list')) { function mixin__list($block = null, $attributes = array(), $id = null) { $items = array_slice(func_get_args(), 3); global $■;$■['id'] = $id;?><ul<?php attr('id', $id, true) ?>><?php if ($items) : foreach ($items as $item) : $■['item'] = $item; ?><li><?= htmlspecialchars($item) ?></li><?php endforeach; endif ?></ul><?php } } ?><?php mixin__list(null, array(), 'my-list', 1, 2, 3, 4) ?>"
+			""", "<?php if (!function_exists('mixin__list')) { function mixin__list($block = null, $attributes = array(), $id = null) { $items = array_slice(func_get_args(), 3); global $■;$■['id'] = $id;?><ul<?php attr('id', $id, true) ?>><?php if ($items) : foreach ($items as $item) : $■['item'] = $item; ?><li><?php echo htmlspecialchars($item) ?></li><?php endforeach; endif ?></ul><?php } } ?><?php mixin__list(null, array(), 'my-list', 1, 2, 3, 4) ?>"
 
 	describe "other mixed tests", ->
 		it 'mixin + class attrs + interpolation', ->
@@ -348,7 +348,7 @@ describe 'JadePhpCompiler', ->
 						article
 					footer
 					</body>
-			""", '<!DOCTYPE html><html><head><title>test</title></head><body <?= $bodyAttributes ?>><header></header><main><article></article></main><footer></footer></body></html>'
+			""", '<!DOCTYPE html><html><head><title>test</title></head><body <?php echo $bodyAttributes ?>><header></header><main><article></article></main><footer></footer></body></html>'
 
 	describe "issues from GitHub", ->
 		it "#21 'buf.push(...)' appears on the output", ->
@@ -357,4 +357,4 @@ describe 'JadePhpCompiler', ->
 				!= data
 				if myvar
 					div bar
-			""", '<div>foo</div><?= $data ?><?php if ($myvar) : ?><div>bar</div><?php endif ?>'
+			""", '<div>foo</div><?php echo $data ?><?php if ($myvar) : ?><div>bar</div><?php endif ?>'
