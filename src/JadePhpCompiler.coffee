@@ -147,9 +147,9 @@ Compiler:: =
           range = parseJSExpression(rest)
           # code = ((if "!" is match[2] then "" else "jade.escape")) + "((jade_interp = " + range.src + ") == null ? '' : jade_interp)"
           if "!" is match[2]
-          	code = "<?= #{@jsExpressionToPhp range.src} ?>"
+          	code = "<?php echo #{@jsExpressionToPhp range.src} ?>"
           else
-          	code = "<?= htmlspecialchars(#{@jsExpressionToPhp range.src}) ?>"
+          	code = "<?php echo htmlspecialchars(#{@jsExpressionToPhp range.src}) ?>"
           @bufferExpression code
           @buffer rest.substr(range.end + 1), true
           return
@@ -351,7 +351,7 @@ Compiler:: =
     @setDoctype doctype.val or "default"  if doctype and (doctype.val or not @doctype)
     if @doctype
       if ///<\?///.test @doctype
-        @buf.push "<?= \'#{@doctype.replace "'", "\'"}\' ?>"
+        @buf.push "<?php echo \'#{@doctype.replace "'", "\'"}\' ?>"
       else
         @buffer @doctype
     @hasCompiledDoctype = true
@@ -624,7 +624,7 @@ Compiler:: =
       val = code.val.trimLeft()
       val = @jsExpressionToPhp val
       val = "htmlspecialchars(" + val + ")"  if code.escape
-      val = '<?= ' + val + ' ?>'
+      val = '<?php echo ' + val + ' ?>'
       @bufferExpression val
     else if IF_REGEX.test code.val
       m = code.val.match IF_REGEX
@@ -744,7 +744,7 @@ Compiler:: =
         if buffer
           # @bufferExpression "jade.attr(\"" + key + "\", " + attr.val + ", " + utils.stringify(escaped) + ", " + utils.stringify(@terse) + ")"
           if ///^[a-zA-Z_][a-z_A-Z0-9]*///.test attr.val
-            # @bufferExpression "<?= ($_ = #{@jsExpressionToPhp attr.val}) ? (' #{key}=\"' . #{if escaped then 'htmlspecialchars($_)' else '$_'} . '\"') : '' ?>"
+            # @bufferExpression "<?php echo ($_ = #{@jsExpressionToPhp attr.val}) ? (' #{key}=\"' . #{if escaped then 'htmlspecialchars($_)' else '$_'} . '\"') : '' ?>"
             @bufferExpression "<?php attr('#{key}', #{@jsExpressionToPhp attr.val}, #{if escaped then 'true' else 'false'}) ?>"
           else
             jsString = attr.val
@@ -778,7 +778,7 @@ Compiler:: =
         #       phpExpr += "array_push($_, #{phpClassExpr}); "
         # else
         #   phpClassExpr = @jsExpressionToPhp classes[0]
-        #   phpExpr += "is_array(#{phpClassExpr}) ? #{phpClassExpr} : array(#{phpClassExpr}); " 
+        #   phpExpr += "is_array(#{phpClassExpr}) ? #{phpClassExpr} : array(#{phpClassExpr}); "
         # phpExpr += '$_ = array_filter($_); if (!empty($_)) echo \' class="\' . join(" ", $_) . \'"\'; ?>'
         # @buffer phpExpr
         attrClassArgs = if classes.length is 1
