@@ -26,11 +26,14 @@
     "jade2php": "./bin/jade2php"
   },
   "dependencies": {
+    "character-parser": "^1.2.0",
     "commander": "^2.4.0",
+    "constantinople": "^2.0.1",
     "jade": "1.7.0",
     "js2php": "0.0.14",
     "mkdirp": "^0.5.0",
-    "monocle": "^1.1.51"
+    "monocle": "^1.1.51",
+    "void-elements": "^1.0.0"
   },
   "devDependencies": {
     "chai": "*",
