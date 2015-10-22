@@ -2,16 +2,15 @@ jade2php
 ========
 
 Unlock Jade for PHP! Convert Jade templates into raw PHP templates. CLI tool and JavaScript API. Test covered.
+[**Gulp plugin**](https://github.com/viktorbezdek/gulp-jade2php) available.
 
 ## Purpose
 Write Jade templates, parse them with original Jade parser (not a PHP port) and convert into equivalent PHP templates.
 
-## Installation
-* to install command line utility: `npm install -g jade2php`
-* for API usage: `npm install --save jade2php`
-
-## Usage
-TBD
+## Getting started
+* install [**gulp**-jade2php](https://github.com/viktorbezdek/gulp-jade2php): `npm install --save gulp-jade2php`
+* install command line utility: `npm install -g jade2php`
+* install node module for API usage: `npm install --save jade2php`
 
 ## Features
 Full support for all Jade features is maintained through unit testing, based on Language Reference.
