@@ -792,6 +792,12 @@ Compiler:: =
           (if classEscaping[i] then runtime.escape(cls) else cls)
         )))
       else
-        classes = "(jade_interp = " + utils.stringify(classEscaping) + "," + " jade.joinClasses([" + classes.join(",") + "].map(jade.joinClasses).map(function (cls, i) {" + "   return jade_interp[i] ? jade.escape(cls) : cls" + " }))" + ")"
+        classes = utils.stringify(runtime.joinClasses(classes.map(runtime.joinClasses).map((cls, i) =>
+          if isConstant(cls)
+            cls = toConstant(cls)
+            (if classEscaping[i] then runtime.escape(cls) else cls)
+          else
+            @jsExpressionToPhp cls
+        )))
       buf.push "\"class\": " + classes  if classes.length
     "{" + buf.join(",") + "}"
