@@ -19,8 +19,6 @@ IF_REGEX = ///^if\s\(\s?(.*)\)$///
 ELSE_IF_REGEX = ///^else\s+if\s+\(\s?(.*)\)$///
 LOOP_REGEX = ///^(for|while)\s*\((.+)\)$///
 
-phpRuntimeCode = require './phpRuntimeCode'
-phpExtractorCode = require './phpExtractorCode'
 
 "use strict"
 
@@ -101,8 +99,8 @@ Compiler:: =
               x++
           i++
       result = ''
-      result += phpRuntimeCode unless @omitPhpRuntime
-      result += phpExtractorCode unless @omitPhpExtractor
+      result += require './phpRuntimeCode' unless @omitPhpRuntime
+      result += require './phpExtractorCode' unless @omitPhpExtractor
       result += @buf.join if @pp then "\n" else ""
       result
     catch e
@@ -430,7 +428,7 @@ Compiler:: =
         @buf.push "function()"
         @buf.push " use ($block) " if @insideMixin
         @buf.push "{ ?>"
-        @buf.push phpExtractorCode unless @omitPhpExtractor
+        @buf.push require './phpExtractorCode' unless @omitPhpExtractor
         @visit block
         @buf.push "<?php }"
       else
