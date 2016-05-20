@@ -149,7 +149,7 @@ MIT
 ## Running tests
 PHP must be installed to run tests.
 ```bash
-npm intall --dev
+npm install --dev
 npm test
 ```
 
