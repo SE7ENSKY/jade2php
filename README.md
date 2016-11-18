@@ -1,7 +1,5 @@
-jade2php [DEPRECATED]
+jade2php
 ========
-
-_This project is not maintained._
 
 Unlock Jade for PHP! Convert Jade templates into raw PHP templates. CLI tool and JavaScript API. Test covered.
 [**Gulp plugin**](https://github.com/viktorbezdek/gulp-jade2php) available.
