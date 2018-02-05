@@ -73,6 +73,7 @@ files = program.args
 transpilePugToPhp = (src, options = { filename: '' }) ->
 	# parser = new pug.Parser str, options.filename, options
 	# tokens = parser.parse()
+	# console.log src
 	tokens = lex(src, options)
 	filename = options.filename
 	ast = parse(tokens, {filename, src})

@@ -238,10 +238,38 @@ Compiler:: =
   @api public
   ###
   visitNode: (node) ->
-    console.log node.type
     this["visit" + node.type] node
 
-  
+  ###*
+    node.type (ast.type)
+      NamedBlock - review
+      Block
+      Case
+      Filter
+      Mixin
+      Tag
+      InterpolatedTag - ToDo
+      When
+      Code
+      While - ToDo
+      Each
+      Conditional - ToDo
+      Include - ToDo
+      Extends - ToDo
+      RawInclude - ToDo
+      Attrs - review
+      BlockComment
+      Comment
+      Doctype
+      IncludeFilter - ToDo
+      MixinBlock
+      YieldBlock - ToDo 
+      Text
+      FileReference - ToDo
+  ###
+
+
+
   ###*
   Visit case `node`.
   
@@ -727,6 +755,8 @@ Compiler:: =
     else @attrs attrs, true  if attrs.length
     return
 
+  visitAttrs: (attrs, attributeBlocks) ->
+    @visitAttributes attrs, attributeBlocks
   
   ###*
   Compile attributes.
@@ -809,3 +839,104 @@ Compiler:: =
         )))
       buf.push "\"class\": " + classes  if classes.length
     "{" + buf.join(",") + "}"
+
+
+  # TODO
+
+  ###*
+  Visit `InterpolatedTag`.
+  
+  @param {Literal} node
+  @api public
+  ###
+  visitInterpolatedTag: (node) ->
+    console.log 'ast.type InterpolatedTag not implemented'
+    return
+
+
+  ###*
+  Visit `While`.
+  
+  @param {Literal} node
+  @api public
+  ###
+  visitWhile: (node) ->
+    console.log 'ast.type While not implemented'
+    return
+
+
+  ###*
+  Visit `Conditional`.
+  
+  @param {Literal} node
+  @api public
+  ###
+  visitConditional: (node) ->
+    console.log 'ast.type Conditional not implemented'
+    return
+
+
+  ###*
+  Visit `Include`.
+  
+  @param {Literal} node
+  @api public
+  ###
+  visitInclude: (node) ->
+    console.log 'ast.type Include not implemented'
+    return
+
+
+  ###*
+  Visit `Extends`.
+  
+  @param {Literal} node
+  @api public
+  ###
+  visitExtends: (node) ->
+    console.log 'ast.type Extends not implemented'
+    return
+
+
+  ###*
+  Visit `RawInclude`.
+  
+  @param {Literal} node
+  @api public
+  ###
+  visitRawInclude: (node) ->
+    console.log 'ast.type RawInclude not implemented'
+    return
+
+
+  ###*
+  Visit `IncludeFilter`.
+  
+  @param {Literal} node
+  @api public
+  ###
+  visitIncludeFilter: (node) ->
+    console.log 'ast.type IncludeFilter not implemented'
+    return
+
+
+  ###*
+  Visit `YieldBlock`.
+  
+  @param {Literal} node
+  @api public
+  ###
+  visitYieldBlock: (node) ->
+    console.log 'ast.type YieldBlock not implemented'
+    return
+
+
+  ###*
+  Visit `FileReference`.
+  
+  @param {Literal} node
+  @api public
+  ###
+  visitFileReference: (node) ->
+    console.log 'ast.type FileReference not implemented'
+    return
