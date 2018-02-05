@@ -27,7 +27,7 @@ filters = require("pug-filters")
 doctypes = require("doctypes")
 runtime = require("pug-runtime")
 stringify = require("js-stringify")
-selfClosing = require("void-elements") # @ToDo
+selfClosing = require("void-elements")
 parseJSExpression = require("character-parser").parseMax
 constantinople = require("constantinople")
 
@@ -39,7 +39,6 @@ Initialize `Compiler` with the given `node`.
 @api public
 ###
 Compiler = module.exports = Compiler = (node, options) ->
-  console.log node
   @options = options = options or {}
   @node = node
   @hasCompiledDoctype = false
@@ -286,17 +285,6 @@ Compiler:: =
     @buffer node.str
     return
 
-  ###*
-  Visit all nodes in `NamedBlock`.
-  @ToDo
-  
-  @param {NamedBlock} node
-  @api public
-  ###
-  visitNamedBlock: (node) ->
-    console.log node
-    # @buffer node.str
-    return
   
   ###*
   Visit all nodes in `block`.
@@ -335,6 +323,15 @@ Compiler:: =
       ++i
     return
 
+  ###*
+  Visit all nodes in `NamedBlock`.
+  
+  @param {NamedBlock} node
+  @api public
+  ###
+  visitNamedBlock: (node) ->
+    @visitBlock node
+    return
   
   ###*
   Visit a mixin's `block` keyword.
@@ -528,7 +525,7 @@ Compiler:: =
     
     # pretty print
     @prettyIndent 0, true  if pp and not tag.isInline()
-    if tag.selfClosing or (not @xml and selfClosing.indexOf(tag.name) isnt -1)
+    if tag.selfClosing or (not @xml and selfClosing[tag.name])
       @buffer "<"
       bufferName()
       @visitAttributes tag.attrs, tag.attributeBlocks
@@ -774,7 +771,7 @@ Compiler:: =
     ).bind(this)
     if buffer
       if classes.every(isConstant)
-        @buffer runtime.cls(classes.map(toConstant), classEscaping)
+        @buffer runtime.classes(classes.map(toConstant), classEscaping)
       else
         # phpExpr = '<?php $_ = '
 
