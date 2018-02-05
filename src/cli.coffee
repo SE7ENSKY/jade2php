@@ -9,8 +9,10 @@ join = path.join
 program = require 'commander'
 monocle = require('monocle')()
 mkdirp = require 'mkdirp'
-jade = require 'jade'
-JadePhpCompiler = require './JadePhpCompiler'
+# pug = require 'pug'
+parse = require 'pug-parser'
+lex = require 'pug-lexer'
+PugPhpCompiler = require './PugPhpCompiler'
 
 options = {}
 
@@ -37,20 +39,20 @@ program.on '--help', ->
 	console.log """
 		Examples:
 
-			# translate jade the templates dir
-			$ jade templates
+			# translate pug the templates dir
+			$ pug templates
 
 			# create {foo,bar}.html
-			$ jade {foo,bar}.jade
+			$ pug {foo,bar}.pug
 
-			# jade over stdio
-			$ jade < my.jade > my.html
+			# pug over stdio
+			$ pug < my.pug > my.html
 
-			# jade over stdio
-			$ echo 'h1 Jade!' | jade
+			# pug over stdio
+			$ echo 'h1 Pug!' | pug
 
 			# foo, bar dirs rendering to /tmp
-			$ jade foo bar --out /tmp"""
+			$ pug foo bar --out /tmp"""
 
 
 program.parse process.argv
@@ -68,10 +70,14 @@ options.filename = program.path if program.path
 options.watch = program.watch
 files = program.args
 
-transpileJadeToPhp = (str, options = { filename: '' }) ->
-	parser = new jade.Parser str, options.filename, options
-	tokens = parser.parse()
-	compiler = new JadePhpCompiler tokens, options
+transpilePugToPhp = (src, options = { filename: '' }) ->
+	# parser = new pug.Parser str, options.filename, options
+	# tokens = parser.parse()
+	tokens = lex(src, options)
+	filename = options.filename
+	ast = parse(tokens, {filename, src})
+	# console.log ast
+	compiler = new PugPhpCompiler ast, options
 	compiler.compile()
 
 stdin = ->
@@ -81,7 +87,7 @@ stdin = ->
 		buf += chunk
 
 	process.stdin.on "end", ->
-		output = transpileJadeToPhp buf, options
+		output = transpilePugToPhp buf, options
 		process.stdout.write output
 	
 	process.stdin.resume()
@@ -94,24 +100,24 @@ stdin = ->
 
 
 getNameFromFileName = (filename) ->
-	file = path.basename(filename, ".jade")
+	file = path.basename(filename, ".pug")
 	file.toLowerCase().replace(/[^a-z0-9]+([a-z])/g, (_, character) ->
 		character.toUpperCase()
 	) + "Template"
 
 renderFile = (path) ->
-	re = /\.jade$/
+	re = /\.pug$/
 	fs.lstat path, (err, stat) ->
 		throw err  if err
 		
-		# Found jade file
+		# Found pug file
 		if stat.isFile() and re.test(path)
 			fs.readFile path, "utf8", (err, str) ->
 				throw err  if err
 				options.filename = path
 				options.name = getNameFromFileName(path)  if program.nameAfterFile
 				console.log "transpiling #{path}"
-				compiledPhp = transpileJadeToPhp str, options
+				compiledPhp = transpilePugToPhp str, options
 				extname = ".php"
 				path = path.replace(re, extname)
 				path = join(program.out, basename(path))  if program.out

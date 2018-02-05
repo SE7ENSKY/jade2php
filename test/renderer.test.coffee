@@ -1,18 +1,18 @@
 chai = require('chai')
 chai.should()
 
-jade = require 'jade'
-jade2php = require '../src/jade2php'
+pug = require 'pug'
+pug2php = require '../src/pug2php'
 
-describe 'JadePhpCompiler', ->
-	c = (jadeSrc, referenceCode, opts = null) ->
+describe 'PugPhpCompiler', ->
+	c = (pugSrc, referenceCode, opts = null) ->
 		opts or= 
 			omitPhpRuntime: yes
 			omitPhpExtractor: yes
-		compiledPhp = jade2php jadeSrc, opts
+		compiledPhp = pug2php pugSrc, opts
 		compiledPhp.should.eql referenceCode
 
-	describe 'rendering simple jade syntax into vanilla html', ->
+	describe 'rendering simple pug syntax into vanilla html', ->
 
 		it 'should support simple text', ->
 			c "| Hello world!", "Hello world!"
@@ -100,7 +100,7 @@ describe 'JadePhpCompiler', ->
 			c 'article(id="post-#{type}-#{id}")', '<article id="post-<?php echo htmlspecialchars($type) ?>-<?php echo htmlspecialchars($id) ?>"></article>'
 			c 'article(id="post-#{type}-#{id}") Post \##{id} of type \'#{type}\'', '<article id="post-<?php echo htmlspecialchars($type) ?>-<?php echo htmlspecialchars($id) ?>">Post #<?php echo htmlspecialchars($id) ?> of type \'<?php echo htmlspecialchars($type) ?>\'</article>'
 
-			# jade not support this :(
+			# pug not support this :(
 			# c 'article(id="post-!{idNumber}")', '<article id="post-<?php echo $idNumber ?>"></article>'
 
 	describe 'control statements', ->
@@ -255,8 +255,8 @@ describe 'JadePhpCompiler', ->
 					span.user-name !{firstName} !{lastName}
 
 				+user-name("Node", "JS")
-				+user-name("Jade", "PHP")
-			""", "<?php if (!function_exists('mixin__user_name')) { function mixin__user_name($block = null, $attributes = array(), $firstName = null, $lastName = null) { global $■;$■['firstName'] = $firstName;$■['lastName'] = $lastName;?><span class=\"user-name\"><?php echo $firstName ?> <?php echo $lastName ?></span><?php } } ?><?php mixin__user_name(null, array(), \"Node\", \"JS\") ?><?php mixin__user_name(null, array(), \"Jade\", \"PHP\") ?>"
+				+user-name("Pug", "PHP")
+			""", "<?php if (!function_exists('mixin__user_name')) { function mixin__user_name($block = null, $attributes = array(), $firstName = null, $lastName = null) { global $■;$■['firstName'] = $firstName;$■['lastName'] = $lastName;?><span class=\"user-name\"><?php echo $firstName ?> <?php echo $lastName ?></span><?php } } ?><?php mixin__user_name(null, array(), \"Node\", \"JS\") ?><?php mixin__user_name(null, array(), \"Pug\", \"PHP\") ?>"
 
 		it 'support mixin blocks', ->
 			c """

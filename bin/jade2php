@@ -1,7 +1,0 @@
-#!/usr/bin/env node
-
-// For development
-// require("coffee-script/register")
-// require("../src/cli")
-
-require("../lib/cli")

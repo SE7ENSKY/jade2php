@@ -1,45 +1,49 @@
 {
-  "name": "jade2php",
-  "description": "Unlock Jade for PHP! Convert Jade templates into raw PHP templates. CLI tool and JavaScript API. Test covered.",
-  "version": "1.2.3",
+  "name": "pug2php",
+  "description": "Unlock Pug for PHP! Convert Pug templates into raw PHP templates. CLI tool and JavaScript API. Test covered.",
+  "version": "2.0.0",
   "license": "MIT",
   "author": "Ivan Kravchenko",
   "keywords": [
-    "jade",
+    "pug",
     "php",
-    "jade to php",
-    "jade2php",
+    "pug to php",
+    "pug2php",
     "transpiler",
     "converter"
   ],
-  "homepage": "https://github.com/SE7ENSKY/jade2php",
-  "bugs": "https://github.com/SE7ENSKY/jade2php/issues",
+  "homepage": "https://github.com/SE7ENSKY/pug2php",
+  "bugs": "https://github.com/SE7ENSKY/pug2php/issues",
   "repository": {
     "type": "git",
-    "url": "git://github.com/SE7ENSKY/jade2php.git"
+    "url": "git://github.com/SE7ENSKY/pug2php.git"
   },
   "directories": {
     "lib": "./lib"
   },
-  "main": "./lib/jade2php",
+  "main": "./lib/pug2php",
   "bin": {
-    "jade2php": "./bin/jade2php"
+    "pug2php": "./bin/pug2php"
   },
   "dependencies": {
-    "character-parser": "^1.2.0",
-    "commander": "^2.4.0",
-    "constantinople": "^2.0.1",
-    "jade": "1.7.0",
-    "js2php": "0.0.14",
-    "mkdirp": "^0.5.0",
+    "character-parser": "^3.0.0",
+    "commander": "^2.13.0",
+    "constantinople": "^3.1.0",
+    "doctypes": "^1.1.0",
+    "js-stringify": "^1.0.2",
+    "js2php": "0.1.0",
+    "mkdirp": "^0.5.1",
     "monocle": "^1.1.51",
-    "void-elements": "^1.0.0"
+    "pug": "^2.0.0-rc.4",
+    "pug-lexer": "^3.1.0",
+    "pug-parser": "^4.0.0",
+    "void-elements": "^3.1.0"
   },
   "devDependencies": {
     "chai": "*",
     "coffee-script": "*",
     "mocha": "*",
-    "sync-exec": "^0.5.0"
+    "sync-exec": "^0.6.2"
   },
   "scripts": {
     "test": "./node_modules/.bin/mocha --compilers coffee:coffee-script/register",

@@ -16,10 +16,10 @@ When submitting a pull request, make sure that the code follows the general styl
 
 ### Running Tests
 
-To run tests, make sure you have `npm install`ed, then just run `npm test` in the root. If you'd like to run tests just for one specific adapter, you can use mocha's grep option, like this `mocha -g jade` - this would run just the jade2php test suite.
+To run tests, make sure you have `npm install`ed, then just run `npm test` in the root. If you'd like to run tests just for one specific adapter, you can use mocha's grep option, like this `mocha -g pug` - this would run just the pug2php test suite.
 
 The way tests are set up is fairly simple, a folder in `fixtures` and a `describe` block for each adapter. All tests are currently compared to expected output through an pure javascript AST, to ensure compatibility across systems.
 Tests are split up in three distinct files:
-- `test/renderer.test.coffee` Test original jade language features
+- `test/renderer.test.coffee` Test original pug language features
 - `test/jsExpressionToPhp.test.coffee` Test transpilation of expressions from JS to PHP
 - `test/renderer.test.coffee` Test transpiler features

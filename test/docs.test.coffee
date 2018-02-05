@@ -1,8 +1,8 @@
 chai = require('chai')
 chai.should()
 
-jade = require 'jade'
-jade2php = require '../src/jade2php'
+pug = require 'pug'
+pug2php = require '../src/pug2php'
 exec = require 'sync-exec'
 fs = require 'fs'
 
@@ -18,14 +18,14 @@ runPhp = (phpCode) ->
 	fs.unlink tmpFilename
 	output
 
-test = (testName, jadeSrc) ->
+test = (testName, pugSrc) ->
 	it testName, ->
-		referenceHtml = jade.render jadeSrc
-		phpTemplate = jade2php jadeSrc
+		referenceHtml = pug.render pugSrc
+		phpTemplate = pug2php pugSrc
 		testHtml = runPhp phpTemplate
 		testHtml.should.eql referenceHtml
 
-describe 'Jade Language Reference', ->
+describe 'Pug Language Reference', ->
 
 	it "PHP CLI utility must be installed", ->
 		runPhp("<?php echo 'installed';").should.eql "installed"
@@ -41,10 +41,10 @@ describe 'Jade Language Reference', ->
 		"""
 		test 'Block in a Tag', """
 			script.
-			  if (usingJade)
+			  if (usingPug)
 			    console.log('you are awesome')
 			  else
-			    console.log('use jade')
+			    console.log('use pug')
 		"""
 
 	describe 'Tags', ->

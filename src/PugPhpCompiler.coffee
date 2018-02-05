@@ -1,12 +1,12 @@
 isConstant = (src) ->
   constantinople src,
-    jade: runtime
-    jade_interp: `undefined`
+    pug: runtime
+    pug_interp: `undefined`
 
 toConstant = (src) ->
   constantinople.toConstant src,
-    jade: runtime
-    jade_interp: `undefined`
+    pug: runtime
+    pug_interp: `undefined`
 
 errorAtNode = (node, error) ->
   error.line = node.line
@@ -22,12 +22,12 @@ LOOP_REGEX = ///^(for|while)\s*\((.+)\)$///
 
 "use strict"
 
-nodes = require("jade/lib/nodes")
-filters = require("jade/lib/filters")
-doctypes = require("jade/lib/doctypes")
-runtime = require("jade/lib/runtime")
-utils = require("jade/lib/utils")
-selfClosing = require("void-elements")
+# nodes = require("jade/lib/nodes")
+filters = require("pug-filters")
+doctypes = require("doctypes")
+runtime = require("pug-runtime")
+stringify = require("js-stringify")
+selfClosing = require("void-elements") # @ToDo
 parseJSExpression = require("character-parser").parseMax
 constantinople = require("constantinople")
 
@@ -39,6 +39,7 @@ Initialize `Compiler` with the given `node`.
 @api public
 ###
 Compiler = module.exports = Compiler = (node, options) ->
+  console.log node
   @options = options = options or {}
   @node = node
   @hasCompiledDoctype = false
@@ -76,7 +77,7 @@ Compiler:: =
   compile: ->
     try
       @buf = []
-      @buf.push "var jade_indent = [];"  if @pp
+      @buf.push "var pug_indent = [];"  if @pp
       @lastBufferedIdx = -1
       @visit @node
       unless @dynamicMixins
@@ -104,7 +105,7 @@ Compiler:: =
       result += @buf.join if @pp then "\n" else ""
       result
     catch e
-      console.error "Error transpiling Jade to PHP"
+      console.error "Error transpiling Pug to PHP"
       throw e
 
   
@@ -143,7 +144,7 @@ Compiler:: =
         else
           rest = match[3]
           range = parseJSExpression(rest)
-          # code = ((if "!" is match[2] then "" else "jade.escape")) + "((jade_interp = " + range.src + ") == null ? '' : jade_interp)"
+          # code = ((if "!" is match[2] then "" else "pug.escape")) + "((pug_interp = " + range.src + ") == null ? '' : pug_interp)"
           if "!" is match[2]
           	code = "<?php echo #{@jsExpressionToPhp range.src} ?>"
           else
@@ -151,7 +152,7 @@ Compiler:: =
           @bufferExpression code
           @buffer rest.substr(range.end + 1), true
           return
-    # str = utils.stringify(str)
+    # str = stringify(str)
     # str = str.substr(1, str.length - 2)
     if @lastBufferedIdx is @buf.length
       # @lastBuffered += " + \""  if @lastBufferedType is "code"
@@ -206,7 +207,7 @@ Compiler:: =
     offset = offset or 0
     newline = (if newline then "\n" else "")
     @buffer newline + Array(@indents + offset).join("  ")
-    @buf.push "buf.push.apply(buf, jade_indent);"  if @parentIndents
+    @buf.push "buf.push.apply(buf, pug_indent);"  if @parentIndents
     return
 
   
@@ -218,7 +219,7 @@ Compiler:: =
   ###
   visit: (node) ->
     debug = @debug
-    # @buf.push "jade_debug.unshift({ lineno: " + node.line + ", filename: " + ((if node.filename then utils.stringify(node.filename) else "jade_debug[0].filename")) + " });"  if debug
+    # @buf.push "pug_debug.unshift({ lineno: " + node.line + ", filename: " + ((if node.filename then stringify(node.filename) else "pug_debug[0].filename")) + " });"  if debug
     
     # Massive hack to fix our context
     # stack for - else[ if] etc
@@ -227,7 +228,7 @@ Compiler:: =
     #   @buf.pop()
     #   @buf.pop()
     @visitNode node
-    # @buf.push "jade_debug.shift();"  if debug
+    # @buf.push "pug_debug.shift();"  if debug
     return
 
   
@@ -238,6 +239,7 @@ Compiler:: =
   @api public
   ###
   visitNode: (node) ->
+    console.log node.type
     this["visit" + node.type] node
 
   
@@ -284,6 +286,17 @@ Compiler:: =
     @buffer node.str
     return
 
+  ###*
+  Visit all nodes in `NamedBlock`.
+  @ToDo
+  
+  @param {NamedBlock} node
+  @api public
+  ###
+  visitNamedBlock: (node) ->
+    console.log node
+    # @buffer node.str
+    return
   
   ###*
   Visit all nodes in `block`.
@@ -330,9 +343,9 @@ Compiler:: =
   @api public
   ###
   visitMixinBlock: (block) ->
-    # @buf.push "jade_indent.push('" + Array(@indents + 1).join("  ") + "');"  if @pp
+    # @buf.push "pug_indent.push('" + Array(@indents + 1).join("  ") + "');"  if @pp
     # @buf.push "block && block();"
-    # @buf.push "jade_indent.pop();"  if @pp
+    # @buf.push "pug_indent.pop();"  if @pp
     @buf.push "<?php if (is_callable($block)) $block(); ?>"
     return
 
@@ -364,7 +377,7 @@ Compiler:: =
   @api public
   ###
   visitMixin: (mixin) ->
-    # name = "jade_mixins["
+    # name = "pug_mixins["
     args = mixin.args or ""
     block = mixin.block
     attrs = mixin.attrs
@@ -390,7 +403,7 @@ Compiler:: =
 
     if mixin.call
       @mixins[key].used = true
-      # @buf.push "jade_indent.push('" + Array(@indents + 1).join("  ") + "');"  if pp
+      # @buf.push "pug_indent.push('" + Array(@indents + 1).join("  ") + "');"  if pp
       # if block or attrs.length or attrsBlocks.length
       #   @buf.push name + ".call({"
       #   if block
@@ -411,7 +424,7 @@ Compiler:: =
       #     if attrs.length
       #       val = @attrs(attrs)
       #       attrsBlocks.unshift val
-      #     @buf.push "attributes: jade.merge([" + attrsBlocks.join(",") + "])"
+      #     @buf.push "attributes: pug.merge([" + attrsBlocks.join(",") + "])"
       #   else if attrs.length
       #     val = @attrs(attrs)
       #     @buf.push "attributes: " + val
@@ -421,7 +434,7 @@ Compiler:: =
       #     @buf.push "});"
       # else
       #   @buf.push name + "(" + args + ");"
-      # @buf.push "jade_indent.pop();"  if pp
+      # @buf.push "pug_indent.pop();"  if pp
       @buf.push "<?php mixin__#{phpMixinName}("
 
       if block
@@ -457,8 +470,8 @@ Compiler:: =
       # @buf.push "var block = (this && this.block), attributes = (this && this.attributes) || {};"
       # if rest
       #   @buf.push "var " + rest + " = [];"
-      #   @buf.push "for (jade_interp = " + args.length + "; jade_interp < arguments.length; jade_interp++) {"
-      #   @buf.push "  " + rest + ".push(arguments[jade_interp]);"
+      #   @buf.push "for (pug_interp = " + args.length + "; pug_interp < arguments.length; pug_interp++) {"
+      #   @buf.push "  " + rest + ".push(arguments[pug_interp]);"
       #   @buf.push "}"
       # @parentIndents++
       # @visit block
@@ -708,12 +721,12 @@ Compiler:: =
         attributeBlocks.unshift val
       @buffer "<?php attrs(" + (for attributeBlock in attributeBlocks
         if attributeBlock[0] is '{'
-          cc = attributeBlock.replace ///jade\.escape///g, 'htmlspecialchars'
+          cc = attributeBlock.replace ///pug\.escape///g, 'htmlspecialchars'
           @jsExpressionToPhp cc
         else
           @jsExpressionToPhp attributeBlock
       ).join(", ") + "); ?>"
-      # @bufferExpression "jade.attrs(jade.merge([" + attributeBlocks.join(",") + "]), " + utils.stringify(@terse) + ")"
+      # @bufferExpression "pug.attrs(pug.merge([" + attributeBlocks.join(",") + "]), " + stringify(@terse) + ")"
     else @attrs attrs, true  if attrs.length
     return
 
@@ -737,26 +750,26 @@ Compiler:: =
         else
           val = toConstant(attr.val)
           val = runtime.escape(val)  if escaped and not (key.indexOf("data") is 0 and typeof val isnt "string")
-          buf.push utils.stringify(key) + ": " + utils.stringify(val)
+          buf.push stringify(key) + ": " + stringify(val)
       else
         if buffer
-          # @bufferExpression "jade.attr(\"" + key + "\", " + attr.val + ", " + utils.stringify(escaped) + ", " + utils.stringify(@terse) + ")"
+          # @bufferExpression "pug.attr(\"" + key + "\", " + attr.val + ", " + stringify(escaped) + ", " + stringify(@terse) + ")"
           if ///^[a-zA-Z_][a-z_A-Z0-9]*///.test attr.val
             # @bufferExpression "<?php echo ($_ = #{@jsExpressionToPhp attr.val}) ? (' #{key}=\"' . #{if escaped then 'htmlspecialchars($_)' else '$_'} . '\"') : '' ?>"
             @bufferExpression "<?php attr('#{key}', #{@jsExpressionToPhp attr.val}, #{if escaped then 'true' else 'false'}) ?>"
           else
             jsString = attr.val
-            jadeString = jsString.replace(///^"///, '').replace(///"$///, '')
-            jadeString = jadeString.replace ///"\s\+\s\(([^"]+)\)\s\+\s"///g, '#{$1}'
+            pugString = jsString.replace(///^"///, '').replace(///"$///, '')
+            pugString = pugString.replace ///"\s\+\s\(([^"]+)\)\s\+\s"///g, '#{$1}'
             @buffer " #{key}=\""
-            @buffer jadeString, yes
+            @buffer pugString, yes
             @buffer "\""
         else
           val = attr.val
           if escaped and (key.indexOf("data") isnt 0)
-            val = "jade.escape(" + val + ")"
-          else val = "(typeof (jade_interp = " + val + ") == \"string\" ? jade.escape(jade_interp) : jade_interp)"  if escaped
-          buf.push utils.stringify(key) + ": " + val
+            val = "pug.escape(" + val + ")"
+          else val = "(typeof (pug_interp = " + val + ") == \"string\" ? pug.escape(pug_interp) : pug_interp)"  if escaped
+          buf.push stringify(key) + ": " + val
       return
     ).bind(this)
     if buffer
@@ -786,11 +799,11 @@ Compiler:: =
         @buffer "<?php attr_class(#{attrClassArgs}) ?>"
     else if classes.length
       if classes.every(isConstant)
-        classes = utils.stringify(runtime.joinClasses(classes.map(toConstant).map(runtime.joinClasses).map((cls, i) ->
+        classes = stringify(runtime.joinClasses(classes.map(toConstant).map(runtime.joinClasses).map((cls, i) ->
           (if classEscaping[i] then runtime.escape(cls) else cls)
         )))
       else
-        classes = utils.stringify(runtime.joinClasses(classes.map(runtime.joinClasses).map((cls, i) =>
+        classes = stringify(runtime.joinClasses(classes.map(runtime.joinClasses).map((cls, i) =>
           if isConstant(cls)
             cls = toConstant(cls)
             (if classEscaping[i] then runtime.escape(cls) else cls)
